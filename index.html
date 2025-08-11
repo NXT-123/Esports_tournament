@@ -20,15 +20,23 @@
 <body>
   <main id="content"></main>
 
-  <!-- ✅ Load GuestController và render -->
+  <!-- ✅ Load New Integrated Application -->
   <script type="module">
+    import App from './src/frontend/js/app.js';
     import { renderGuestView } from './src/frontend/js/views/guestView.js';
     import GuestController from './src/frontend/js/controllers/GuestController.js';
 
+    // Initialize both new and existing systems for backward compatibility
     const guestController = new GuestController();
     window.guestController = guestController;
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize new integrated system
+      if (window.app) {
+        console.log('Tournament Management System integrated successfully');
+      }
+      
+      // Fallback to existing guest view
       await guestController.renderGuestView();
     });
   </script>
