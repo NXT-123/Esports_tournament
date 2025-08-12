@@ -76,6 +76,8 @@ export async function apiCall(endpoint, data = {}, method = 'GET', requireAuth =
     }
 }
 
+
+
 // API endpoints configuration
 export const API_ENDPOINTS = {
     // Authentication
