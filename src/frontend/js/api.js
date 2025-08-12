@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'http://localhost:3000/api';
+const USE_MOCK_BACKEND = true; // Set to true for standalone mode
 
 // Token management
 class TokenManager {
@@ -22,6 +23,11 @@ class TokenManager {
 
 // Enhanced API call function with comprehensive error handling and authentication
 export async function apiCall(endpoint, data = {}, method = 'GET', requireAuth = false) {
+    // Use mock backend if enabled
+    if (USE_MOCK_BACKEND) {
+        return await callMockBackend(endpoint, data, method, requireAuth);
+    }
+    
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     
     const options = {
@@ -72,6 +78,120 @@ export async function apiCall(endpoint, data = {}, method = 'GET', requireAuth =
             }
         }
         
+        throw error;
+    }
+}
+
+// Mock backend API calls
+async function callMockBackend(endpoint, data, method, requireAuth) {
+    // Import mock backend dynamically to avoid circular dependency
+    const { mockBackend } = await import('./mock-backend.js');
+    
+    // Route to appropriate mock backend method
+    const cleanEndpoint = endpoint.replace(/^\//, ''); // Remove leading slash
+    
+    try {
+        // Authentication endpoints
+        if (cleanEndpoint === 'auth/login') {
+            return await mockBackend.login(data);
+        }
+        if (cleanEndpoint === 'auth/register') {
+            return await mockBackend.register(data);
+        }
+        if (cleanEndpoint === 'auth/profile' && method === 'GET') {
+            return await mockBackend.getProfile();
+        }
+        if (cleanEndpoint === 'auth/profile' && method === 'PUT') {
+            return await mockBackend.updateProfile(data);
+        }
+        if (cleanEndpoint === 'auth/logout') {
+            return await mockBackend.logout();
+        }
+        
+        // Tournament endpoints
+        if (cleanEndpoint === 'tournaments' && method === 'GET') {
+            return await mockBackend.getAllTournaments(data);
+        }
+        if (cleanEndpoint === 'tournaments/upcoming') {
+            return await mockBackend.getUpcomingTournaments();
+        }
+        if (cleanEndpoint === 'tournaments/ongoing') {
+            return await mockBackend.getOngoingTournaments();
+        }
+        if (cleanEndpoint === 'tournaments/search') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q') || '';
+            return await mockBackend.searchTournaments(query, data);
+        }
+        if (cleanEndpoint.startsWith('tournaments/') && method === 'GET') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.getTournamentById(id);
+        }
+        if (cleanEndpoint === 'tournaments' && method === 'POST') {
+            return await mockBackend.createTournament(data);
+        }
+        if (cleanEndpoint.startsWith('tournaments/') && method === 'PUT') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.updateTournament(id, data);
+        }
+        if (cleanEndpoint.startsWith('tournaments/') && method === 'DELETE') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.deleteTournament(id);
+        }
+        if (cleanEndpoint.includes('/register') && method === 'POST') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.registerForTournament(id);
+        }
+        if (cleanEndpoint.includes('/withdraw') && method === 'DELETE') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.withdrawFromTournament(id);
+        }
+        if (cleanEndpoint === 'tournaments/stats') {
+            return await mockBackend.getTournamentStats();
+        }
+        
+        // News endpoints
+        if (cleanEndpoint === 'news' && method === 'GET') {
+            return await mockBackend.getAllNews(data);
+        }
+        if (cleanEndpoint === 'news/featured') {
+            return await mockBackend.getFeaturedNews();
+        }
+        if (cleanEndpoint.startsWith('news/category/')) {
+            const category = cleanEndpoint.split('/')[2];
+            return await mockBackend.getNewsByCategory(category);
+        }
+        if (cleanEndpoint.startsWith('news/') && method === 'GET') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.getNewsById(id);
+        }
+        if (cleanEndpoint === 'news' && method === 'POST') {
+            return await mockBackend.createNews(data);
+        }
+        if (cleanEndpoint.startsWith('news/') && method === 'PUT') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.updateNews(id, data);
+        }
+        if (cleanEndpoint.startsWith('news/') && method === 'DELETE') {
+            const id = cleanEndpoint.split('/')[1];
+            return await mockBackend.deleteNews(id);
+        }
+        
+        // Admin endpoints
+        if (cleanEndpoint === 'admin/stats') {
+            return await mockBackend.getAdminStats();
+        }
+        
+        // Health check
+        if (cleanEndpoint === 'health') {
+            return await mockBackend.getHealth();
+        }
+        
+        // Default fallback
+        throw new Error(`Mock backend endpoint not implemented: ${method} ${endpoint}`);
+        
+    } catch (error) {
+        console.error(`Mock API call failed: ${method} ${endpoint}`, error);
         throw error;
     }
 }
