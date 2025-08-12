@@ -496,22 +496,6 @@ function updateNewsNavigationButtons() {
   }
 }
 
-function updateNewsNavigationButtons() {
-  const prevBtn = document.querySelector('.news-prev-btn');
-  const nextBtn = document.querySelector('.news-next-btn');
-  const maxPage = Math.ceil(allNews.length / newsPerPage) - 1;
-
-  if (prevBtn) {
-    prevBtn.style.opacity = currentNewsPage > 0 ? '1' : '0.5';
-    prevBtn.style.pointerEvents = currentNewsPage > 0 ? 'auto' : 'none';
-  }
-
-  if (nextBtn) {
-    nextBtn.style.opacity = currentNewsPage < maxPage ? '1' : '0.5';
-    nextBtn.style.pointerEvents = currentNewsPage < maxPage ? 'auto' : 'none';
-  }
-}
-
 // Tải highlight từ backend
 async function loadHighlights() {
   const container = document.getElementById('highlightsList');
