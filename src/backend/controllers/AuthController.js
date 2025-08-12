@@ -154,7 +154,7 @@ class AuthController {
             if (!mockUser) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid credentials'
+                    message: 'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc đăng ký tài khoản mới.'
                 });
             }
 
@@ -164,7 +164,7 @@ class AuthController {
             if (!isPasswordValid) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Invalid credentials'
+                    message: 'Mật khẩu không đúng. Vui lòng nhập lại mật khẩu.'
                 });
             }
 

@@ -163,6 +163,26 @@ export class NewsCarousel extends Carousel {
   }
 }
 
+// Highlight Carousel
+export class HighlightCarousel extends Carousel {
+  constructor(containerId, options = {}) {
+    super(containerId, options);
+  }
+
+  renderItem(highlight) {
+    return `
+      <div class="highlight-card" data-highlight-id="${highlight._id}">
+        <div class="highlight-thumbnail" style="background-image: url('${highlight.thumbnailUrl || ''}')"></div>
+        <div class="highlight-info">
+          <h5 class="highlight-title">${highlight.title}</h5>
+          <p class="highlight-description">${highlight.description || ''}</p>
+          ${highlight.videoUrl ? `<a href="${highlight.videoUrl}" target="_blank" class="watch-btn">Xem video</a>` : ''}
+        </div>
+      </div>
+    `;
+  }
+}
+
 // Utility function to create carousel instances
 export function createCarousel(type, containerId, options = {}) {
   let carousel;
@@ -173,6 +193,9 @@ export function createCarousel(type, containerId, options = {}) {
       break;
     case 'news':
       carousel = new NewsCarousel(containerId, options);
+      break;
+    case 'highlight':
+      carousel = new HighlightCarousel(containerId, options);
       break;
     default:
       carousel = new Carousel(containerId, options);
