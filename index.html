@@ -1,44 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tournament Manager</title>
+  <title>Tournament Manager - Hệ thống quản lý giải đấu</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- ✅ Gắn CSS -->
+  <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="./src/assets/styles/base.css" />
   <link rel="stylesheet" href="./src/assets/styles/theme.css" />
   <link rel="stylesheet" href="./src/assets/styles/components.css" />
   <link rel="stylesheet" href="./src/assets/styles/layout.css" />
   <link rel="stylesheet" href="./src/assets/styles/guest-new.css" />
+  
+  <!-- Loading and Error Styles -->
+  <style>
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      color: #F5F5F5;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #333;
+      border-top: 4px solid #F19EDC;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      color: #F5F5F5;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .error-container h2 {
+      color: #FF6B6B;
+      margin-bottom: 10px;
+    }
+    
+    .error-container button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #F19EDC;
+      color: #1E1E1E;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .error-container button:hover {
+      background: #E081C7;
+    }
+  </style>
 </head>
 <body>
-  <main id="content"></main>
+  <!-- Main content container -->
+  <main id="content">
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Đang khởi tạo ứng dụng...</p>
+    </div>
+  </main>
 
-  <!-- ✅ Load New Integrated Application -->
+  <!-- Application Scripts -->
   <script type="module">
+    // Import all necessary modules
+    import { router } from './src/frontend/js/router.js';
     import App from './src/frontend/js/app.js';
     import { renderGuestView } from './src/frontend/js/views/guestView.js';
     import GuestController from './src/frontend/js/controllers/GuestController.js';
+    import { authController } from './src/frontend/js/controllers/auth.js';
+    import { TokenManager } from './src/frontend/js/api.js';
 
-    // Initialize both new and existing systems for backward compatibility
-    const guestController = new GuestController();
-    window.guestController = guestController;
+    // Global application state
+    window.app = null;
+    window.router = router;
+    window.authController = authController;
+    window.TokenManager = TokenManager;
 
+    // Initialize application
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize new integrated system
-      if (window.app) {
-        console.log('Tournament Management System integrated successfully');
+      try {
+        console.log('🚀 Initializing Tournament Management System...');
+        
+        // Initialize the main App instance
+        window.app = new App();
+        
+        // Create guest controller for backward compatibility
+        const guestController = new GuestController();
+        window.guestController = guestController;
+        
+        // Check authentication status and update UI accordingly
+        if (TokenManager.isAuthenticated()) {
+          console.log('✅ User is authenticated');
+          await authController.loadUserProfile();
+        } else {
+          console.log('ℹ️ User is not authenticated - showing guest view');
+        }
+        
+        console.log('✅ Tournament Management System initialized successfully');
+        
+        // Setup global error handling
+        window.addEventListener('error', (e) => {
+          console.error('Global error:', e.error);
+          router.showError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
+        });
+        
+        // Setup unhandled promise rejection handling
+        window.addEventListener('unhandledrejection', (e) => {
+          console.error('Unhandled promise rejection:', e.reason);
+          e.preventDefault(); // Prevent the default browser behavior
+        });
+        
+      } catch (error) {
+        console.error('❌ Failed to initialize application:', error);
+        
+        // Fallback initialization
+        try {
+          console.log('🔄 Attempting fallback initialization...');
+          const guestController = new GuestController();
+          await guestController.renderGuestView();
+          console.log('✅ Fallback initialization successful');
+        } catch (fallbackError) {
+          console.error('❌ Fallback initialization failed:', fallbackError);
+          document.getElementById('content').innerHTML = `
+            <div class="error-container">
+              <h2>Lỗi khởi tạo ứng dụng</h2>
+              <p>Không thể khởi tạo ứng dụng. Vui lòng thử lại sau.</p>
+              <button onclick="window.location.reload()">Tải lại trang</button>
+            </div>
+          `;
+        }
+      }
+    });
+
+    // Global utility functions
+    window.navigateTo = (path) => {
+      if (window.router) {
+        window.router.navigate(path);
+      } else {
+        window.location.href = path;
+      }
+    };
+
+    window.showNotification = (message, type = 'info') => {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${type}`;
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 600;
+        z-index: 10000;
+        max-width: 300px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: ${type === 'error' ? '#FF6B6B' : type === 'success' ? '#4ECDC4' : '#F19EDC'};
+        animation: slideIn 0.3s ease-out;
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    };
+
+    // Add CSS animations for notifications
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
       }
       
-      // Fallback to existing guest view
-      await guestController.renderGuestView();
-    });
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
   </script>
 </body>
 </html>
