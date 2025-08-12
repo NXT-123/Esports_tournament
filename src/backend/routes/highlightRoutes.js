@@ -1,5 +1,5 @@
 const express = require('express');
-const HighlightController = require('../controllers/HighlightController');
+const HighlightController = require('../controllers/highlightController');
 const { authenticateToken, authorize, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();

@@ -1,5 +1,5 @@
 const express = require('express');
-const NewsController = require('../controllers/NewsController');
+const NewsController = require('../controllers/newsController');
 const { authenticateToken, authorize, checkTournamentOwnership, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
