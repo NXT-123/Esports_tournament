@@ -1,6 +1,19 @@
-const News = require('../models/News');
+const fs = require('fs');
+const path = require('path');
 
 class NewsController {
+    // Get mock news data
+    static getMockNews() {
+        try {
+            const mockDataPath = path.join(__dirname, '../data/news.json');
+            const mockData = fs.readFileSync(mockDataPath, 'utf8');
+            return JSON.parse(mockData);
+        } catch (error) {
+            console.error('Error reading mock news data:', error);
+            return [];
+        }
+    }
+
     // Create new news article
     static async createNews(req, res) {
         try {
