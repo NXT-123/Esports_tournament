@@ -23,7 +23,7 @@ class TokenManager {
 // Enhanced API call function with comprehensive error handling and authentication
 export async function apiCall(endpoint, data = {}, method = 'GET', requireAuth = false) {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
-    
+
     const options = {
         method,
         headers: {
@@ -62,7 +62,7 @@ export async function apiCall(endpoint, data = {}, method = 'GET', requireAuth =
         return result;
     } catch (error) {
         console.error(`API call failed: ${method} ${url}`, error);
-        
+
         // Handle authentication errors
         if (error.message.includes('401') || error.message.includes('unauthorized')) {
             TokenManager.removeToken();
@@ -71,7 +71,7 @@ export async function apiCall(endpoint, data = {}, method = 'GET', requireAuth =
                 window.location.href = '/login.html';
             }
         }
-        
+
         throw error;
     }
 }
@@ -88,7 +88,7 @@ export const API_ENDPOINTS = {
         PROFILE: '/auth/profile',
         CHANGE_PASSWORD: '/auth/change-password'
     },
-    
+
     // Tournaments
     TOURNAMENTS: {
         BASE: '/tournaments',
@@ -104,15 +104,16 @@ export const API_ENDPOINTS = {
         STATUS: (id) => `/tournaments/${id}/status`,
         STATS: '/tournaments/stats'
     },
-    
+
     // News
     NEWS: {
         BASE: '/news',
         BY_ID: (id) => `/news/${id}`,
         FEATURED: '/news/featured',
+        PUBLISHED: '/news/published',
         BY_CATEGORY: (category) => `/news/category/${category}`
     },
-    
+
     // Matches
     MATCHES: {
         BASE: '/matches',
@@ -122,15 +123,16 @@ export const API_ENDPOINTS = {
         LIVE: '/matches/live',
         RESULTS: '/matches/results'
     },
-    
+
     // Highlights
     HIGHLIGHTS: {
         BASE: '/highlights',
         BY_ID: (id) => `/highlights/${id}`,
         FEATURED: '/highlights/featured',
+        PUBLISHED: '/highlights/published',
         BY_MATCH: (matchId) => `/highlights/match/${matchId}`
     },
-    
+
     // Users
     USERS: {
         BASE: '/users',
@@ -138,14 +140,14 @@ export const API_ENDPOINTS = {
         PROFILE: '/users/profile',
         STATS: (id) => `/users/${id}/stats`
     },
-    
+
     // Admin
     ADMIN: {
         USERS: '/admin/users',
         STATS: '/admin/stats',
         MODERATE: '/admin/moderate'
     },
-    
+
     // Health
     HEALTH: '/health'
 };

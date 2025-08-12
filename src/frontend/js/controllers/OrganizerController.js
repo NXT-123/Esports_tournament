@@ -1,6 +1,6 @@
 import Organizer from '../models/Organizer.js';
 import { renderCreateTournament } from '../views/organizerView.js';
-import { apiCall } from '../api.js';
+import { apiCall, API_ENDPOINTS } from '../api.js';
 
 class OrganizerController {
     constructor() {
@@ -16,7 +16,7 @@ class OrganizerController {
             role: 'organizer'
         });
         const tournament = this.currentOrganizer.createTournament(name, format);
-        await apiCall('http://localhost:3000/api/tournaments', tournament, 'POST');
+        await apiCall(API_ENDPOINTS.TOURNAMENTS.BASE, tournament, 'POST', true);
         renderCreateTournament();
     }
 }

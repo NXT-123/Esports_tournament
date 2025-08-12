@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import { renderSearch, renderTournamentDetails } from '../views/userView.js';
-import { apiCall } from '../api.js';
+import { apiCall, API_ENDPOINTS } from '../api.js';
 
 class UserController {
     constructor() {
@@ -8,12 +8,12 @@ class UserController {
     }
 
     async searchTournaments(query) {
-        const data = await apiCall('http://localhost:3000/api/tournaments/search', { query });
+        const data = await apiCall(API_ENDPOINTS.TOURNAMENTS.SEARCH + `?q=${encodeURIComponent(query)}`, {}, 'GET');
         renderSearch(data);
     }
 
     async login(email) {
-        const data = await apiCall('http://localhost:3000/api/login', { email }, 'POST');
+        const data = await apiCall(API_ENDPOINTS.AUTH.LOGIN, { email }, 'POST');
         this.currentUser = new User({
             _id: data.id,
             email,
@@ -22,7 +22,7 @@ class UserController {
         });
         // Redirect to index.html after login
         window.location.href = 'index.html';
-        renderTournamentDetails(await apiCall('http://localhost:3000/api/tournaments/1'));
+        renderTournamentDetails(await apiCall(API_ENDPOINTS.TOURNAMENTS.BY_ID('1'), {}, 'GET'));
     }
 }
 

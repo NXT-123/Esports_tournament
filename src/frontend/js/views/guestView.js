@@ -1,5 +1,5 @@
 import { loadTranslations } from '../lang.js';
-import { apiCall } from '../api.js';
+import { apiCall, API_ENDPOINTS } from '../api.js';
 
 export async function renderGuestView() {
   document.body.innerHTML = `
@@ -295,63 +295,35 @@ export async function renderGuestView() {
   await loadHighlights();
 }
 
-// SỬA LẠI: Hàm loadTournaments dùng template card gốc
+// Tải giải đấu từ backend (đang diễn ra, fallback sang sắp diễn ra)
 async function loadTournaments() {
-  const tournaments = [
-    {
-      _id: "64f000000000000000001001",
-      name: "Summer Cup 2025",
-      format: "round",
-      description: "Giải đấu mùa hè",
-      avatarUrl: "",
-      gameName: "",
-      numberOfPlayers: 0,
-      maxPlayers: 0,
-      startDate: "2025-06-01T00:00:00.000Z",
-      endDate:   "2025-06-15T00:00:00.000Z",
-      status: "upcoming"
-    },
-    {
-      _id: "64f000000000000000001002",
-      name: "Winter Clash",
-      format: "single",
-      description: "Giải đấu mùa đông",
-      avatarUrl: "",
-      gameName: "",
-      numberOfPlayers: 0,
-      maxPlayers: 0,
-      startDate: "2025-12-01T00:00:00.000Z",
-      endDate:   "2025-12-10T00:00:00.000Z",
-      status: "upcoming"
-    },
-    {
-      _id: "64f000000000000000001003",
-      name: "Demo Cup 2025",
-      format: "single",
-      description: "Giải đấu seed mặc định",
-      avatarUrl: "",
-      gameName: "",
-      numberOfPlayers: 0,
-      maxPlayers: 0,
-      startDate: "2025-08-01T00:00:00.000Z",
-      endDate:   "2025-08-10T00:00:00.000Z",
-      status: "upcoming"
-    }
-  ];
   const container = document.getElementById('tournamentCarousel');
-  if (container) {
+  if (!container) return;
+  try {
+    // Thử lấy giải đang diễn ra trước
+    let res = await apiCall(API_ENDPOINTS.TOURNAMENTS.ONGOING, {}, 'GET');
+    let tournaments = res?.data?.tournaments || [];
+    // Nếu không có thì fallback sang giải sắp diễn ra
+    if (!tournaments.length) {
+      res = await apiCall(API_ENDPOINTS.TOURNAMENTS.UPCOMING, {}, 'GET');
+      tournaments = res?.data?.tournaments || [];
+    }
+    if (!tournaments.length) {
+      container.innerHTML = '<div class="loading-placeholder">Chưa có giải đấu</div>';
+      return;
+    }
     container.innerHTML = `
       <div class="carousel-slider">
-        ${tournaments.map(tournament => `
+        ${tournaments.map(t => `
           <div class="tournament-slide">
             <div class="tournament-card-hero">
-              <div class="tournament-image"></div>
+              <div class="tournament-image" style="background-image:url('${t.avatarUrl || ''}')"></div>
               <div class="tournament-info">
-                <h3 class="tournament-name">${tournament.name}</h3>
-                <p class="tournament-desc">${tournament.description}</p>
+                <h3 class="tournament-name">${t.name}</h3>
+                <p class="tournament-desc">${t.description || ''}</p>
                 <div class="tournament-badges">
-                  <span class="status-badge status-${tournament.status}">${tournament.status}</span>
-                  <span class="format-badge">${tournament.format}</span>
+                  <span class="status-badge status-${t.status}">${t.status}</span>
+                  <span class="format-badge">${t.format || ''}</span>
                 </div>
               </div>
             </div>
@@ -359,6 +331,8 @@ async function loadTournaments() {
         `).join('')}
       </div>
     `;
+  } catch (e) {
+    container.innerHTML = '<div class="loading-placeholder">Lỗi tải giải đấu</div>';
   }
 }
 
@@ -366,44 +340,31 @@ let currentNewsPage = 0;
 const newsPerPage = 3;
 let allNews = [];
 
-// SỬA LẠI: Hàm loadNews dùng template card gốc
+// Tải tin tức từ backend
 async function loadNews() {
-  const news = [
-    {
-      _id: "643001",
-      tournamentId: "641001",
-      title: "Spring Cup sắp bắt đầu!",
-      content: "Hãy sẵn sàng cho giải mùa xuân...",
-      images: ["http://example.com/news/spring1.jpg"],
-      authorId: "640002",
-      status: "public",
-      publishedAt: "2025-02-25"
-    },
-    {
-      _id: "643002",
-      tournamentId: "641002",
-      title: "Summer Cup khai mạc ngày 15/6",
-      content: "Nhiều đội mạnh sẽ tranh tài...",
-      images: ["http://example.com/news/summer1.jpg"],
-      authorId: "640002",
-      status: "public",
-      publishedAt: "2025-06-10"
-    }
-  ];
   const container = document.getElementById('newsList');
-  if (container) {
+  if (!container) return;
+  try {
+    const res = await apiCall(API_ENDPOINTS.NEWS.PUBLISHED, {}, 'GET');
+    const news = res?.data?.news || [];
+    if (!news.length) {
+      container.innerHTML = '<div class="loading-placeholder">Chưa có tin tức</div>';
+      return;
+    }
     container.innerHTML = news.map(n => `
       <div class="news-card-new">
-        <div class="news-image" style="background-image:url('${n.images[0]}');"></div>
+        <div class="news-image" style="background-image:url('${(n.images && n.images[0]) || ''}');"></div>
         <div class="news-content-new">
           <h4 class="news-title-new">${n.title}</h4>
-          <p class="news-excerpt">${n.content.substring(0, 100)}...</p>
+          <p class="news-excerpt">${(n.content || '').substring(0, 100)}...</p>
           <div class="news-meta-new">
-            <span class="news-date">${n.publishedAt}</span>
+            <span class="news-date">${n.publishedAt ? new Date(n.publishedAt).toLocaleDateString() : ''}</span>
           </div>
         </div>
       </div>
     `).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="loading-placeholder">Lỗi tải tin tức</div>';
   }
 }
 
@@ -478,43 +439,30 @@ function updateNewsNavigationButtons() {
   }
 }
 
-// SỬA LẠI: Hàm loadHighlights dùng template card gốc
+// Tải highlight từ backend
 async function loadHighlights() {
-  const highlights = [
-    {
-      _id: "644001",
-      tournamentId: "641001",
-      matchId: "64m5001",
-      title: "Highlight trận khai mạc",
-      videoUrl: "https://www.youtube.com/watch?v=vid1",
-      description: "Pha kết liễu mãn nhãn",
-      status: "public",
-      createdAt: "2025-03-01T20:00:00Z"
-    },
-    {
-      _id: "644002",
-      tournamentId: "641002",
-      matchId: "645002",
-      title: "Highlight bán kết Summer",
-      videoUrl: "https://www.youtube.com/watch?v=vid2",
-      description: "Pha solo cực căng",
-      status: "public",
-      createdAt: "2025-06-20T18:00:00Z"
-    }
-  ];
   const container = document.getElementById('highlightsList');
-  if (container) {
+  if (!container) return;
+  try {
+    const res = await apiCall(API_ENDPOINTS.HIGHLIGHTS.PUBLISHED, {}, 'GET');
+    const highlights = res?.data?.highlights || [];
+    if (!highlights.length) {
+      container.innerHTML = '<div class="loading-placeholder">Chưa có highlight</div>';
+      return;
+    }
     container.innerHTML = highlights.map(h => `
       <div class="highlight-item">
         <div class="highlight-thumbnail"></div>
         <div class="highlight-info">
           <div style="display: flex; align-items: center; gap: 8px;">
             <h5 class="highlight-name" style="margin: 0;">${h.title}</h5>
-            <a href="${h.videoUrl}" target="_blank" class="watch-btn">Xem video</a>
+            ${h.videoUrl ? `<a href="${h.videoUrl}" target="_blank" class="watch-btn">Xem video</a>` : ''}
           </div>
-          <p class="highlight-desc">${h.description}</p>
+          <p class="highlight-desc">${h.description || ''}</p>
         </div>
       </div>
     `).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="loading-placeholder">Lỗi tải highlight</div>';
   }
 }
