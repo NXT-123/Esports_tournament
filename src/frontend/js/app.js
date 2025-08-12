@@ -5,6 +5,7 @@ import { authController } from './controllers/auth.js';
 import { tournamentController } from './controllers/tournaments.js';
 import { newsController } from './controllers/news.js';
 import { apiCall, API_ENDPOINTS, TokenManager } from './api.js';
+import { backendStarter } from './backend-starter.js';
 
 class App {
     constructor() {
@@ -22,6 +23,9 @@ class App {
     async init() {
         console.log('Initializing Tournament Management System...');
         
+        // Wait for backend to be ready
+        await this.waitForBackend();
+        
         // Initialize authentication first
         await this.initAuth();
         
@@ -32,6 +36,42 @@ class App {
         this.setupGlobalEventListeners();
         
         console.log('Application initialized successfully');
+    }
+
+    // Wait for backend to be ready
+    async waitForBackend() {
+        return new Promise((resolve) => {
+            // Check if backend is already ready
+            if (backendStarter.getStatus().isRunning) {
+                resolve();
+                return;
+            }
+
+            // Listen for backend ready event
+            const onBackendReady = () => {
+                window.removeEventListener('backendReady', onBackendReady);
+                window.removeEventListener('backendUnavailable', onBackendUnavailable);
+                resolve();
+            };
+
+            const onBackendUnavailable = () => {
+                window.removeEventListener('backendReady', onBackendReady);
+                window.removeEventListener('backendUnavailable', onBackendUnavailable);
+                console.warn('Backend not available, continuing with limited functionality');
+                resolve();
+            };
+
+            window.addEventListener('backendReady', onBackendReady);
+            window.addEventListener('backendUnavailable', onBackendUnavailable);
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                window.removeEventListener('backendReady', onBackendReady);
+                window.removeEventListener('backendUnavailable', onBackendUnavailable);
+                console.warn('Backend startup timeout, continuing anyway');
+                resolve();
+            }, 10000);
+        });
     }
 
     // Initialize authentication

@@ -1,6 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'http://localhost:3000/api';
-const USE_MOCK_BACKEND = true; // Set to true for standalone mode
+const USE_MOCK_BACKEND = false; // Using real backend server
 
 // Token management
 class TokenManager {
