@@ -94,6 +94,7 @@
   height: 400px;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .news-card:hover {
@@ -152,6 +153,7 @@
   height: 400px;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .tournament-card:hover {
@@ -235,6 +237,7 @@
   height: 300px;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .highlight-card:hover {

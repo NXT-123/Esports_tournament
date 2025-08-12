@@ -317,7 +317,66 @@
   </footer>
 
   <!-- Scripts -->
-  <script>
+  <script type="module">
+    import { apiCall, API_ENDPOINTS } from './js/api.js';
+
+    // Get tournament ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentId = urlParams.get('id');
+
+    // Load tournament details
+    async function loadTournamentDetails() {
+      if (!tournamentId) {
+        console.error('No tournament ID provided');
+        return;
+      }
+
+      try {
+        const response = await apiCall(API_ENDPOINTS.TOURNAMENTS.BY_ID(tournamentId), {}, 'GET');
+        
+        if (response.success && response.data.tournament) {
+          const tournament = response.data.tournament;
+          
+          // Update page title
+          document.title = `${tournament.name} - Tournament Manager`;
+          
+          // Update tournament title
+          const titleElement = document.querySelector('.tournament-title');
+          if (titleElement) {
+            titleElement.textContent = tournament.name;
+          }
+          
+          // Update tournament info
+          updateTournamentInfo(tournament);
+        } else {
+          console.error('Failed to load tournament details');
+        }
+      } catch (error) {
+        console.error('Error loading tournament details:', error);
+      }
+    }
+
+    // Update tournament information
+    function updateTournamentInfo(tournament) {
+      // Update description if available
+      const descriptionElement = document.querySelector('.tournament-description');
+      if (descriptionElement && tournament.description) {
+        descriptionElement.textContent = tournament.description;
+      }
+      
+      // Update status if available
+      const statusElement = document.querySelector('.tournament-status');
+      if (statusElement && tournament.status) {
+        statusElement.textContent = tournament.status;
+        statusElement.className = `tournament-status status-${tournament.status}`;
+      }
+    }
+
+    // Load tournament details when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTournamentDetails();
+    });
+
     // Match detail function
     function openMatchDetail() {
       alert('Tính năng xem chi tiết trận đấu sẽ sớm được cập nhật!');

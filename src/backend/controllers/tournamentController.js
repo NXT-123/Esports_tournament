@@ -1,8 +1,47 @@
-const Tournament = require('../models/Tournament');
-const Competitor = require('../models/Competitor');
-const Match = require('../models/Match');
+const fs = require('fs');
+const path = require('path');
 
 class TournamentController {
+    // Get mock tournaments data
+    static getMockTournaments() {
+        try {
+            const mockDataPath = path.join(__dirname, '../data/tournaments.json');
+            const mockData = fs.readFileSync(mockDataPath, 'utf8');
+            return JSON.parse(mockData);
+        } catch (error) {
+            console.error('Error reading mock tournaments data:', error);
+            return [];
+        }
+    }
+
+    // Get tournament by ID
+    static async getTournamentById(req, res) {
+        try {
+            const { id } = req.params;
+            const tournaments = this.getMockTournaments();
+            const tournament = tournaments.find(t => t._id === id);
+
+            if (!tournament) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Tournament not found'
+                });
+            }
+
+            res.json({
+                success: true,
+                message: 'Tournament retrieved successfully',
+                data: { tournament }
+            });
+        } catch (error) {
+            console.error('Get tournament by ID error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching tournament'
+            });
+        }
+    }
+
     // Create new tournament
     static async createTournament(req, res) {
         try {

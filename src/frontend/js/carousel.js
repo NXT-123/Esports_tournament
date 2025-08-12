@@ -126,7 +126,7 @@ export class TournamentCarousel extends Carousel {
 
   renderItem(tournament) {
     return `
-      <div class="tournament-card" data-tournament-id="${tournament._id}">
+      <div class="tournament-card" data-tournament-id="${tournament._id}" onclick="window.location.href='./tournament-detail.html?id=${tournament._id}'">
         <div class="tournament-image" style="background-image: url('${tournament.avatarUrl || ''}')"></div>
         <div class="tournament-info">
           <h3 class="tournament-name">${tournament.name}</h3>
@@ -149,7 +149,7 @@ export class NewsCarousel extends Carousel {
 
   renderItem(news) {
     return `
-      <div class="news-card" data-news-id="${news._id}">
+      <div class="news-card" data-news-id="${news._id}" onclick="window.location.href='./view-news.html?id=${news._id}'">
         <div class="news-image" style="background-image: url('${(news.images && news.images[0]) || ''}')"></div>
         <div class="news-content">
           <h4 class="news-title">${news.title}</h4>
@@ -171,12 +171,12 @@ export class HighlightCarousel extends Carousel {
 
   renderItem(highlight) {
     return `
-      <div class="highlight-card" data-highlight-id="${highlight._id}">
+      <div class="highlight-card" data-highlight-id="${highlight._id}" onclick="window.location.href='./view-highlight.html?id=${highlight._id}'">
         <div class="highlight-thumbnail" style="background-image: url('${highlight.thumbnailUrl || ''}')"></div>
         <div class="highlight-info">
           <h5 class="highlight-title">${highlight.title}</h5>
           <p class="highlight-description">${highlight.description || ''}</p>
-          ${highlight.videoUrl ? `<a href="${highlight.videoUrl}" target="_blank" class="watch-btn">Xem video</a>` : ''}
+          ${highlight.videoUrl ? `<a href="${highlight.videoUrl}" target="_blank" class="watch-btn" onclick="event.stopPropagation()">Xem video</a>` : ''}
         </div>
       </div>
     `;

@@ -213,8 +213,9 @@
         </div>
     </footer>
 
-    <script src="js/api.js"></script>
-    <script>
+    <script type="module">
+        import { apiCall, API_ENDPOINTS } from './js/api.js';
+
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize page
             initializeNewsView();
@@ -341,11 +342,8 @@
 
         async function fetchNewsById(id) {
             try {
-                const response = await fetch(`/api/news/${id}`);
-                if (response.ok) {
-                    return await response.json();
-                }
-                return null;
+                const response = await apiCall(API_ENDPOINTS.NEWS.BY_ID(id), {}, 'GET');
+                return response.success ? response.data.news : null;
             } catch (error) {
                 console.error('Error fetching news:', error);
                 return null;
