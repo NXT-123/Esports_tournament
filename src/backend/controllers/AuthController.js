@@ -44,41 +44,34 @@ class AuthController {
                 });
             }
 
-            // Check if running in mock mode
-            if (global.mockMode) {
-                // Check if user already exists in mock data
-                const existingUser = this.findMockUser(email);
-                if (existingUser) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'User with this email already exists'
-                    });
-                }
-
-                // In mock mode, just return success (don't actually create user)
-                const mockUser = {
-                    _id: 'mock_' + Date.now(),
-                    email,
-                    fullName,
-                    role
-                };
-
-                const token = generateToken(mockUser._id);
-                const refreshToken = generateRefreshToken(mockUser._id);
-
-                return res.status(201).json({
-                    success: true,
-                    message: 'User registered successfully (mock mode)',
-                    data: {
-                        user: mockUser,
-                        token,
-                        refreshToken
-                    }
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid email format'
                 });
             }
 
-            // Check if user already exists
-            const existingUser = await User.findOne({ email });
+            // Validate password strength
+            if (password.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Password must be at least 6 characters long'
+                });
+            }
+
+            // Validate role
+            const validRoles = ['user', 'organizer', 'admin'];
+            if (!validRoles.includes(role)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid role. Must be user, organizer, or admin'
+                });
+            }
+
+            // Check if user already exists in mock data
+            const existingUser = this.findMockUser(email);
             if (existingUser) {
                 return res.status(400).json({
                     success: false,
@@ -86,23 +79,42 @@ class AuthController {
                 });
             }
 
-            // Create new user (store hashed password to passwordHash)
+            // Hash password
             const passwordHash = await bcrypt.hash(password, 10);
-            const user = new User({
+
+            // Create new user object
+            const newUser = {
+                _id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 email,
                 fullName,
                 passwordHash,
-                role
-            });
+                role,
+                avatarUrl: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=150&h=150&fit=crop&crop=face`
+            };
 
-            await user.save();
+            console.log('Creating new user:', { email, fullName, role });
+
+            // Add user to mock data file
+            const mockDataPath = path.join(__dirname, '../data/users.json');
+            const mockUsers = this.getMockUsers();
+            mockUsers.push(newUser);
+
+            console.log('Writing to file:', mockDataPath);
+            console.log('Total users after adding:', mockUsers.length);
+
+            // Write back to file
+            fs.writeFileSync(mockDataPath, JSON.stringify(mockUsers, null, 4), 'utf8');
+            console.log('File written successfully');
+
+            // Store user in memory for authentication
+            this.storeMockUserInMemory(newUser._id, newUser);
 
             // Generate tokens
-            const token = generateToken(user._id);
-            const refreshToken = generateRefreshToken(user._id);
+            const token = generateToken(newUser._id);
+            const refreshToken = generateRefreshToken(newUser._id);
 
             // Remove password from response
-            const userResponse = user.toObject();
+            const userResponse = { ...newUser };
             delete userResponse.passwordHash;
 
             res.status(201).json({
@@ -116,16 +128,6 @@ class AuthController {
             });
         } catch (error) {
             console.error('Registration error:', error);
-
-            if (error.name === 'ValidationError') {
-                const errors = Object.values(error.errors).map(err => err.message);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Validation failed',
-                    errors
-                });
-            }
-
             res.status(500).json({
                 success: false,
                 message: 'Server error during registration'
@@ -146,17 +148,8 @@ class AuthController {
                 });
             }
 
-            // Debug: Check mock mode status
-            console.log('Mock mode status:', global.mockMode);
-            console.log('Global object keys:', Object.keys(global));
-            console.log('Attempting to use mock mode for login...');
-
-                        // Always use mock mode for now to fix the authentication issue
-            console.log('Using mock mode for authentication');
-            
             // Find user in mock data
             const mockUser = AuthController.findMockUser(email);
-            console.log('Mock user found:', mockUser ? 'Yes' : 'No');
             
             if (!mockUser) {
                 return res.status(401).json({
@@ -165,54 +158,41 @@ class AuthController {
                 });
             }
 
-            // For mock mode, we'll use a simple password check
-            // In a real scenario, you'd want to hash the passwords properly
-            // For now, let's check against some common test passwords
-            const validPasswords = {
-                'testuser@esport.com': 'password123',
-                'admin@esport.com': 'admin123',
-                'organizer@esport.com': 'organizer123'
-            };
-
-            console.log('Checking password for:', email);
-            if (validPasswords[email] !== password) {
-                console.log('Password mismatch');
+            // Verify password using bcrypt
+            const isPasswordValid = await bcrypt.compare(password, mockUser.passwordHash);
+            
+            if (!isPasswordValid) {
                 return res.status(401).json({
                     success: false,
                     message: 'Invalid credentials'
                 });
             }
 
-            console.log('Password verified, generating token...');
-
-            // Create mock user object
+            // Create user object for response
             const user = {
-                _id: mockUser._id || 'mock_' + Date.now(),
+                _id: mockUser._id,
                 email: mockUser.email,
                 fullName: mockUser.fullName,
                 role: mockUser.role,
                 avatarUrl: mockUser.avatarUrl
             };
 
-            // Store mock user in memory for authentication middleware
+            // Store user in memory for authentication middleware
             AuthController.storeMockUserInMemory(user._id, user);
 
-            // Generate tokens
-            const token = generateToken(user._id);
+            // Generate tokens with role information
+            const token = generateToken(user._id, user.role);
             const refreshToken = generateRefreshToken(user._id);
-
-            console.log('Token generated successfully');
 
             return res.json({
                 success: true,
-                message: 'Login successful (mock mode)',
+                message: 'Login successful',
                 data: {
                     user,
                     token,
                     refreshToken
                 }
             });
-
 
         } catch (error) {
             console.error('Login error:', error);
