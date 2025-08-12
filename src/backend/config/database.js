@@ -18,8 +18,8 @@ const connectDB = async () => {
         console.log('Server will run with mock data responses.');
         
         // Set a flag to indicate we're running in mock mode
-        global.mockMode = true;
-        console.log('Mock mode flag set:', global.mockMode);
+        global.mockMode = false; // Disable mock mode since we're using JSON files
+        console.log('Mock mode disabled, using JSON files');
         return false;
     }
 };
