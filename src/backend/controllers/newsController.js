@@ -67,30 +67,33 @@ class NewsController {
                 search
             } = req.query;
 
-            const query = { status: 'public' };
+            const allNews = this.getMockNews();
+            let filteredNews = allNews.filter(n => n.status === 'published');
 
             // Add filters
-            if (tournamentId) query.tournamentId = tournamentId;
+            if (tournamentId) {
+                filteredNews = filteredNews.filter(n => n.tournamentId === tournamentId);
+            }
             if (search) {
-                query.$or = [
-                    { title: { $regex: search, $options: 'i' } },
-                    { content: { $regex: search, $options: 'i' } }
-                ];
+                filteredNews = filteredNews.filter(n => 
+                    n.title.toLowerCase().includes(search.toLowerCase()) ||
+                    n.content.toLowerCase().includes(search.toLowerCase())
+                );
             }
 
-            const news = await News.find(query)
-                .populate('authorId', 'fullName email')
-                .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1, _id: -1 })
-                .limit(limit * 1)
-                .skip((page - 1) * limit);
+            // Sort by publishedAt (newest first)
+            filteredNews.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-            const total = await News.countDocuments(query);
+            // Pagination
+            const total = filteredNews.length;
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedNews = filteredNews.slice(startIndex, endIndex);
 
             res.json({
                 success: true,
                 data: {
-                    news,
+                    news: paginatedNews,
                     pagination: {
                         current: parseInt(page),
                         pages: Math.ceil(total / limit),
@@ -287,15 +290,15 @@ class NewsController {
         try {
             const { limit = 5 } = req.query;
 
-            const news = await News.find({ status: 'public' })
-                .populate('authorId', 'fullName email')
-                .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1, _id: -1 })
-                .limit(parseInt(limit));
+            const allNews = this.getMockNews();
+            const featuredNews = allNews
+                .filter(n => n.status === 'published')
+                .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+                .slice(0, parseInt(limit));
 
             res.json({
                 success: true,
-                data: { news }
+                data: { news: featuredNews }
             });
         } catch (error) {
             console.error('Get featured news error:', error);

@@ -125,62 +125,9 @@ class TournamentController {
     // Get all tournaments with filtering and pagination
     static async getAllTournaments(req, res) {
         try {
-            // Check if running in mock mode
-            if (global.mockMode) {
-                // Return mock tournament data
-                const mockTournaments = [
-                    {
-                        _id: 'mock_tournament_1',
-                        name: 'Mock Tournament 1',
-                        format: 'Single Elimination',
-                        description: 'A mock tournament for testing',
-                        gameName: 'Mock Game',
-                        organizerId: {
-                            _id: 'mock_organizer_1',
-                            fullName: 'Mock Organizer',
-                            email: 'organizer@esport.com'
-                        },
-                        startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-                        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
-                        maxPlayers: 32,
-                        numberOfPlayers: 16,
-                        status: 'upcoming',
-                        avatarUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=200&fit=crop'
-                    },
-                    {
-                        _id: 'mock_tournament_2',
-                        name: 'Mock Tournament 2',
-                        format: 'Double Elimination',
-                        description: 'Another mock tournament for testing',
-                        gameName: 'Mock Game 2',
-                        organizerId: {
-                            _id: 'mock_organizer_2',
-                            fullName: 'Mock Organizer 2',
-                            email: 'organizer2@esport.com'
-                        },
-                        startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-                        endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
-                        maxPlayers: 16,
-                        numberOfPlayers: 8,
-                        status: 'upcoming',
-                        avatarUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=200&fit=crop'
-                    }
-                ];
-
-                res.json({
-                    success: true,
-                    data: {
-                        tournaments: mockTournaments,
-                        pagination: {
-                            current: 1,
-                            pages: 1,
-                            total: 2
-                        }
-                    }
-                });
-                return;
-            }
-
+            // Get tournaments from JSON file
+            const tournaments = this.getMockTournaments();
+            
             const {
                 page = 1,
                 limit = 10,
@@ -190,32 +137,37 @@ class TournamentController {
                 gameName
             } = req.query;
 
-            const query = {};
+            let filteredTournaments = [...tournaments];
 
             // Add filters
-            if (status) query.status = status;
-            if (formatFilter) query.format = formatFilter;
-            if (gameName) query.gameName = gameName;
+            if (status) {
+                filteredTournaments = filteredTournaments.filter(t => t.status === status);
+            }
+            if (formatFilter) {
+                filteredTournaments = filteredTournaments.filter(t => t.format === formatFilter);
+            }
+            if (gameName) {
+                filteredTournaments = filteredTournaments.filter(t => t.gameName === gameName);
+            }
             if (search) {
-                query.$or = [
-                    { name: { $regex: search, $options: 'i' } },
-                    { gameName: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } }
-                ];
+                filteredTournaments = filteredTournaments.filter(t => 
+                    t.name.toLowerCase().includes(search.toLowerCase()) ||
+                    t.description.toLowerCase().includes(search.toLowerCase())
+                );
             }
 
-            const tournaments = await Tournament.find(query)
-                .populate('organizerId', 'fullName email')
-                .sort({ _id: -1 })
-                .limit(limit * 1)
-                .skip((page - 1) * limit);
 
-            const total = await Tournament.countDocuments(query);
+
+            // Pagination
+            const total = filteredTournaments.length;
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedTournaments = filteredTournaments.slice(startIndex, endIndex);
 
             res.json({
                 success: true,
                 data: {
-                    tournaments,
+                    tournaments: paginatedTournaments,
                     pagination: {
                         current: parseInt(page),
                         pages: Math.ceil(total / limit),
@@ -677,14 +629,12 @@ class TournamentController {
     // Get upcoming tournaments
     static async getUpcomingTournaments(req, res) {
         try {
-            const now = new Date();
-            const tournaments = await Tournament.find({ status: 'upcoming', startDate: { $gte: now } })
-                .populate('organizerId', 'fullName email')
-                .limit(10);
+            const tournaments = this.getMockTournaments();
+            const upcomingTournaments = tournaments.filter(t => t.status === 'upcoming').slice(0, 10);
 
             res.json({
                 success: true,
-                data: { tournaments }
+                data: { tournaments: upcomingTournaments }
             });
         } catch (error) {
             console.error('Get upcoming tournaments error:', error);
@@ -698,13 +648,12 @@ class TournamentController {
     // Get ongoing tournaments
     static async getOngoingTournaments(req, res) {
         try {
-            const now2 = new Date();
-            const tournaments = await Tournament.find({ status: 'ongoing', startDate: { $lte: now2 } })
-                .populate('organizerId', 'fullName email');
+            const tournaments = this.getMockTournaments();
+            const ongoingTournaments = tournaments.filter(t => t.status === 'ongoing');
 
             res.json({
                 success: true,
-                data: { tournaments }
+                data: { tournaments: ongoingTournaments }
             });
         } catch (error) {
             console.error('Get ongoing tournaments error:', error);
