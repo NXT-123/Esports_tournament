@@ -57,7 +57,7 @@ export async function renderGuestView() {
         <div class="hero-container">
           <h1 class="hero-title">Các giải đấu đang diễn ra</h1>
           <div class="tournament-carousel">
-            <button class="carousel-btn prev-btn">
+            <button class="carousel-btn prev-btn" id="tournamentPrevBtn">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -65,7 +65,7 @@ export async function renderGuestView() {
             <div id="tournamentCarousel" class="carousel-content">
               <div class="loading-placeholder">Loading tournaments...</div>
             </div>
-            <button class="carousel-btn next-btn">
+            <button class="carousel-btn next-btn" id="tournamentNextBtn">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -295,6 +295,11 @@ export async function renderGuestView() {
   await loadHighlights();
 }
 
+// Tournament carousel functionality
+let currentTournamentPage = 0;
+let tournaments = [];
+const tournamentsPerPage = 3;
+
 // Tải giải đấu từ backend (đang diễn ra, fallback sang sắp diễn ra)
 async function loadTournaments() {
   const container = document.getElementById('tournamentCarousel');
@@ -302,7 +307,7 @@ async function loadTournaments() {
   try {
     // Thử lấy giải đang diễn ra trước
     let res = await apiCall(API_ENDPOINTS.TOURNAMENTS.ONGOING, {}, 'GET');
-    let tournaments = res?.data?.tournaments || [];
+    tournaments = res?.data?.tournaments || [];
     // Nếu không có thì fallback sang giải sắp diễn ra
     if (!tournaments.length) {
       res = await apiCall(API_ENDPOINTS.TOURNAMENTS.UPCOMING, {}, 'GET');
@@ -312,9 +317,28 @@ async function loadTournaments() {
       container.innerHTML = '<div class="loading-placeholder">Chưa có giải đấu</div>';
       return;
     }
+    
+    displayTournamentsPage(0);
+    setupTournamentNavigation();
+  } catch (e) {
+    container.innerHTML = '<div class="loading-placeholder">Lỗi tải giải đấu</div>';
+  }
+}
+
+function displayTournamentsPage(page) {
+  const container = document.getElementById('tournamentCarousel');
+  const startIndex = page * tournamentsPerPage;
+  const endIndex = startIndex + tournamentsPerPage;
+  const tournamentsToShow = tournaments.slice(startIndex, endIndex);
+
+  if (tournamentsToShow.length === 0) return;
+
+  container.style.opacity = '0';
+  
+  setTimeout(() => {
     container.innerHTML = `
       <div class="carousel-slider">
-        ${tournaments.map(t => `
+        ${tournamentsToShow.map(t => `
           <div class="tournament-slide">
             <div class="tournament-card-hero">
               <div class="tournament-image" style="background-image:url('${t.avatarUrl || ''}')"></div>
@@ -331,14 +355,54 @@ async function loadTournaments() {
         `).join('')}
       </div>
     `;
-  } catch (e) {
-    container.innerHTML = '<div class="loading-placeholder">Lỗi tải giải đấu</div>';
+    
+    container.style.opacity = '1';
+    updateTournamentNavigationButtons();
+  }, 150);
+}
+
+function setupTournamentNavigation() {
+  const prevBtn = document.getElementById('tournamentPrevBtn');
+  const nextBtn = document.getElementById('tournamentNextBtn');
+
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentTournamentPage > 0) {
+        currentTournamentPage--;
+        displayTournamentsPage(currentTournamentPage);
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      const maxPage = Math.ceil(tournaments.length / tournamentsPerPage) - 1;
+      if (currentTournamentPage < maxPage) {
+        currentTournamentPage++;
+        displayTournamentsPage(currentTournamentPage);
+      }
+    });
   }
 }
 
+function updateTournamentNavigationButtons() {
+  const prevBtn = document.getElementById('tournamentPrevBtn');
+  const nextBtn = document.getElementById('tournamentNextBtn');
+  const maxPage = Math.ceil(tournaments.length / tournamentsPerPage) - 1;
+
+  if (prevBtn) {
+    prevBtn.style.opacity = currentTournamentPage > 0 ? '1' : '0.5';
+    prevBtn.style.pointerEvents = currentTournamentPage > 0 ? 'auto' : 'none';
+  }
+
+  if (nextBtn) {
+    nextBtn.style.opacity = currentTournamentPage < maxPage ? '1' : '0.5';
+    nextBtn.style.pointerEvents = currentTournamentPage < maxPage ? 'auto' : 'none';
+  }
+}
+
+// News carousel functionality
 let currentNewsPage = 0;
-const newsPerPage = 3;
 let allNews = [];
+const newsPerPage = 3;
 
 // Tải tin tức từ backend
 async function loadNews() {
@@ -346,27 +410,20 @@ async function loadNews() {
   if (!container) return;
   try {
     const res = await apiCall(API_ENDPOINTS.NEWS.PUBLISHED, {}, 'GET');
-    const news = res?.data?.news || [];
-    if (!news.length) {
+    allNews = res?.data?.news || [];
+    if (!allNews.length) {
       container.innerHTML = '<div class="loading-placeholder">Chưa có tin tức</div>';
       return;
     }
-    container.innerHTML = news.map(n => `
-      <div class="news-card-new">
-        <div class="news-image" style="background-image:url('${(n.images && n.images[0]) || ''}');"></div>
-        <div class="news-content-new">
-          <h4 class="news-title-new">${n.title}</h4>
-          <p class="news-excerpt">${(n.content || '').substring(0, 100)}...</p>
-          <div class="news-meta-new">
-            <span class="news-date">${n.publishedAt ? new Date(n.publishedAt).toLocaleDateString() : ''}</span>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    
+    displayNewsPage(0);
+    setupNewsNavigation();
   } catch (e) {
     container.innerHTML = '<div class="loading-placeholder">Lỗi tải tin tức</div>';
   }
 }
+
+
 
 function displayNewsPage(page) {
   const newsList = document.getElementById('newsList');
@@ -420,6 +477,22 @@ function setupNewsNavigation() {
         displayNewsPage(currentNewsPage);
       }
     });
+  }
+}
+
+function updateNewsNavigationButtons() {
+  const prevBtn = document.querySelector('.news-prev-btn');
+  const nextBtn = document.querySelector('.news-next-btn');
+  const maxPage = Math.ceil(allNews.length / newsPerPage) - 1;
+
+  if (prevBtn) {
+    prevBtn.style.opacity = currentNewsPage > 0 ? '1' : '0.5';
+    prevBtn.style.pointerEvents = currentNewsPage > 0 ? 'auto' : 'none';
+  }
+
+  if (nextBtn) {
+    nextBtn.style.opacity = currentNewsPage < maxPage ? '1' : '0.5';
+    nextBtn.style.pointerEvents = currentNewsPage < maxPage ? 'auto' : 'none';
   }
 }
 

@@ -83,6 +83,16 @@
   transform: scale(1.1);
 }
 
+.nav-arrow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.nav-arrow:disabled:hover {
+  transform: none;
+}
+
 .tournament-carousel {
   max-width: 1200px;
   margin: 0 auto;
@@ -93,6 +103,130 @@
   display: flex;
   gap: 30px;
   justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.news-container {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666;
+  font-size: 16px;
+  font-style: italic;
+}
+
+.tournament-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  color: white;
+  padding: 20px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.tournament-card:hover .tournament-info {
+  transform: translateY(0);
+}
+
+.tournament-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.tournament-description {
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  opacity: 0.9;
+}
+
+.tournament-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tournament-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-upcoming {
+  background: #FF9800;
+  color: white;
+}
+
+.status-ongoing {
+  background: #4CAF50;
+  color: white;
+}
+
+.status-completed {
+  background: #9E9E9E;
+  color: white;
+}
+
+.tournament-format {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.news-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  color: white;
+  padding: 20px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.news-card:hover .news-content {
+  transform: translateY(0);
+}
+
+.news-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.news-excerpt {
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  opacity: 0.9;
+}
+
+.news-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.news-date {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .tournament-card {
@@ -171,6 +305,11 @@
   display: flex;
   gap: 30px;
   justify-content: center;
+  margin-bottom: 40px;
+}
+
+.news-carousel {
+  position: relative;
   margin-bottom: 40px;
 }
 
