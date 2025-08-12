@@ -113,7 +113,7 @@
     import App from './src/frontend/js/app.js';
     import { renderGuestView } from './src/frontend/js/views/guestView.js';
     import GuestController from './src/frontend/js/controllers/GuestController.js';
-    import { backendStarter } from './src/frontend/js/backend-starter.js';
+    import { simpleBackendCheck } from './src/frontend/js/simple-backend-check.js';
 
     // Show loading status
     function updateStatus(message) {
@@ -168,32 +168,17 @@
     // Main initialization
     async function initializeApp() {
       try {
-        updateStatus('Khởi động backend server...');
+        updateStatus('Kiểm tra kết nối backend...');
         
-        // Listen for backend events
-        window.addEventListener('backendReady', () => {
+        // Simple backend check
+        const isBackendRunning = await simpleBackendCheck.checkBackend();
+        
+        if (isBackendRunning) {
           updateStatus('✅ Backend server đã sẵn sàng!');
-          setTimeout(startApp, 500);
-        });
-
-        window.addEventListener('backendUnavailable', () => {
-          showError('Không thể kết nối đến backend server. Vui lòng khởi động thủ công.');
-        });
-
-        // Wait for backend initialization to complete
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Check if backend is running
-        if (backendStarter.getStatus().isRunning) {
-          updateStatus('✅ Backend server đã sẵn sàng!');
-          setTimeout(startApp, 500);
+          setTimeout(startApp, 1000);
         } else {
-          // If no backend event fired, show error
-          setTimeout(() => {
-            if (!backendStarter.getStatus().isRunning) {
-              showError('Backend server chưa chạy. Cần khởi động thủ công.');
-            }
-          }, 5000);
+          updateStatus('❌ Không thể kết nối backend');
+          showError('Backend server chưa chạy. Vui lòng khởi động thủ công:<br><br>1. Mở Terminal<br>2. Chạy: <code>cd src/backend</code><br>3. Chạy: <code>node server.js</code><br>4. Reload trang này');
         }
 
       } catch (error) {
