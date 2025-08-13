@@ -572,10 +572,10 @@ class HighlightController {
     // Get published highlights
     static async getPublishedHighlights(req, res) {
         try {
-            const highlights = await Highlight.find({ status: 'published' })
+            const highlights = await Highlight.find({ status: 'public' })
                 .populate('tournamentId', 'name status')
                 .populate('matchId', 'teamA teamB scheduledAt')
-                .sort({ publishedAt: -1 });
+                .sort({ createdAt: -1 });
 
             res.json({
                 success: true,

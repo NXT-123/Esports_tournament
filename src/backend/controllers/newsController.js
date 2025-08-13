@@ -84,7 +84,7 @@ class NewsController {
             const news = await News.find(query)
                 .populate('authorId', 'fullName email')
                 .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1 })
+                .sort({ createdAt: -1 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -293,7 +293,7 @@ class NewsController {
             const news = await News.find({ status: 'public' })
                 .populate('authorId', 'fullName email')
                 .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1 })
+                .sort({ createdAt: -1 })
                 .limit(parseInt(limit));
 
             res.json({
@@ -486,10 +486,10 @@ class NewsController {
     static async getPublishedNews(req, res) {
         try {
             console.log('Getting published news from MongoDB...');
-            const news = await News.find({ status: 'published' })
+            const news = await News.find({ status: 'public' })
                 .populate('authorId', 'fullName email')
                 .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1 });
+                .sort({ createdAt: -1 });
 
             console.log('Found', news.length, 'published news articles');
 
