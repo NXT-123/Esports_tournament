@@ -1,103 +1,273 @@
+const User = require('../models/User');
+const Tournament = require('../models/Tournament');
+const Match = require('../models/Match');
+const News = require('../models/News');
+const Highlight = require('../models/Highlight');
+
 class AdminController {
-    static getStats(req, res) {
-        res.json({ 
-            success: true,
-            data: {
-                users: {
-                    total: 150,
-                    active: 130,
-                    banned: 5,
-                    new_this_month: 25
-                },
-                tournaments: {
-                    total: 45,
-                    active: 12,
-                    completed: 30,
-                    cancelled: 3
-                },
-                matches: {
-                    total: 280,
-                    completed: 250,
-                    upcoming: 20,
-                    ongoing: 10
-                },
-                news: {
-                    total: 95,
-                    published: 85,
-                    drafts: 10
-                },
-                highlights: {
-                    total: 180,
-                    published: 165,
-                    pending: 15
+    static async getStats(req, res) {
+        try {
+            const [
+                totalUsers,
+                activeUsers,
+                bannedUsers,
+                newUsersThisMonth,
+                totalTournaments,
+                activeTournaments,
+                completedTournaments,
+                cancelledTournaments,
+                totalMatches,
+                completedMatches,
+                upcomingMatches,
+                ongoingMatches,
+                totalNews,
+                publishedNews,
+                draftNews,
+                totalHighlights,
+                publishedHighlights,
+                pendingHighlights
+            ] = await Promise.all([
+                User.countDocuments(),
+                User.countDocuments({ status: { $ne: 'banned' } }),
+                User.countDocuments({ status: 'banned' }),
+                User.countDocuments({ 
+                    createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
+                }),
+                Tournament.countDocuments(),
+                Tournament.countDocuments({ status: 'active' }),
+                Tournament.countDocuments({ status: 'completed' }),
+                Tournament.countDocuments({ status: 'cancelled' }),
+                Match.countDocuments(),
+                Match.countDocuments({ status: 'completed' }),
+                Match.countDocuments({ status: 'pending', scheduledAt: { $gt: new Date() } }),
+                Match.countDocuments({ status: 'ongoing' }),
+                News.countDocuments(),
+                News.countDocuments({ status: 'published' }),
+                News.countDocuments({ status: 'draft' }),
+                Highlight.countDocuments(),
+                Highlight.countDocuments({ status: 'published' }),
+                Highlight.countDocuments({ status: 'pending' })
+            ]);
+
+            res.json({ 
+                success: true,
+                data: {
+                    users: {
+                        total: totalUsers,
+                        active: activeUsers,
+                        banned: bannedUsers,
+                        new_this_month: newUsersThisMonth
+                    },
+                    tournaments: {
+                        total: totalTournaments,
+                        active: activeTournaments,
+                        completed: completedTournaments,
+                        cancelled: cancelledTournaments
+                    },
+                    matches: {
+                        total: totalMatches,
+                        completed: completedMatches,
+                        upcoming: upcomingMatches,
+                        ongoing: ongoingMatches
+                    },
+                    news: {
+                        total: totalNews,
+                        published: publishedNews,
+                        drafts: draftNews
+                    },
+                    highlights: {
+                        total: totalHighlights,
+                        published: publishedHighlights,
+                        pending: pendingHighlights
+                    }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Get admin stats error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching admin stats'
+            });
+        }
     }
 
-    static getUsers(req, res) {
-        res.json({
-            success: true,
-            message: "Admin user management data",
-            data: {
-                users: [],
-                total: 0,
-                page: 1,
-                limit: 10
+    static async getUsers(req, res) {
+        try {
+            const { page = 1, limit = 10, search } = req.query;
+            
+            const query = {};
+            if (search) {
+                query.$or = [
+                    { fullName: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ];
             }
-        });
+
+            const users = await User.find(query)
+                .select('-passwordHash')
+                .sort({ createdAt: -1 })
+                .limit(limit * 1)
+                .skip((page - 1) * limit);
+
+            const total = await User.countDocuments(query);
+
+            res.json({
+                success: true,
+                message: "Admin user management data",
+                data: {
+                    users,
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit)
+                }
+            });
+        } catch (error) {
+            console.error('Get users error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching users'
+            });
+        }
     }
 
-    static getTournaments(req, res) {
-        res.json({
-            success: true,
-            message: "Admin tournament management data",
-            data: {
-                tournaments: [],
-                total: 0,
-                page: 1,
-                limit: 10
-            }
-        });
+    static async getTournaments(req, res) {
+        try {
+            const { page = 1, limit = 10, status } = req.query;
+            
+            const query = {};
+            if (status) query.status = status;
+
+            const tournaments = await Tournament.find(query)
+                .populate('organizerId', 'fullName email')
+                .sort({ createdAt: -1 })
+                .limit(limit * 1)
+                .skip((page - 1) * limit);
+
+            const total = await Tournament.countDocuments(query);
+
+            res.json({
+                success: true,
+                message: "Admin tournament management data",
+                data: {
+                    tournaments,
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit)
+                }
+            });
+        } catch (error) {
+            console.error('Get tournaments error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching tournaments'
+            });
+        }
     }
 
-    static getNews(req, res) {
-        res.json({
-            success: true,
-            message: "Admin news management data",
-            data: {
-                news: [],
-                total: 0,
-                page: 1,
-                limit: 10
-            }
-        });
+    static async getNews(req, res) {
+        try {
+            const { page = 1, limit = 10, status } = req.query;
+            
+            const query = {};
+            if (status) query.status = status;
+
+            const news = await News.find(query)
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ createdAt: -1 })
+                .limit(limit * 1)
+                .skip((page - 1) * limit);
+
+            const total = await News.countDocuments(query);
+
+            res.json({
+                success: true,
+                message: "Admin news management data",
+                data: {
+                    news,
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit)
+                }
+            });
+        } catch (error) {
+            console.error('Get news error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching news'
+            });
+        }
     }
 
-    static getMatches(req, res) {
-        res.json({
-            success: true,
-            message: "Admin match management data",
-            data: {
-                matches: [],
-                total: 0,
-                page: 1,
-                limit: 10
-            }
-        });
+    static async getMatches(req, res) {
+        try {
+            const { page = 1, limit = 10, status } = req.query;
+            
+            const query = {};
+            if (status) query.status = status;
+
+            const matches = await Match.find(query)
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl')
+                .populate('tournamentId', 'name status')
+                .sort({ scheduledAt: -1 })
+                .limit(limit * 1)
+                .skip((page - 1) * limit);
+
+            const total = await Match.countDocuments(query);
+
+            res.json({
+                success: true,
+                message: "Admin match management data",
+                data: {
+                    matches,
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit)
+                }
+            });
+        } catch (error) {
+            console.error('Get matches error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching matches'
+            });
+        }
     }
 
-    static getHighlights(req, res) {
-        res.json({
-            success: true,
-            message: "Admin highlight management data",
-            data: {
-                highlights: [],
-                total: 0,
-                page: 1,
-                limit: 10
-            }
-        });
+    static async getHighlights(req, res) {
+        try {
+            const { page = 1, limit = 10, status } = req.query;
+            
+            const query = {};
+            if (status) query.status = status;
+
+            const highlights = await Highlight.find(query)
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
+                .sort({ createdAt: -1 })
+                .limit(limit * 1)
+                .skip((page - 1) * limit);
+
+            const total = await Highlight.countDocuments(query);
+
+            res.json({
+                success: true,
+                message: "Admin highlight management data",
+                data: {
+                    highlights,
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit)
+                }
+            });
+        } catch (error) {
+            console.error('Get highlights error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching highlights'
+            });
+        }
     }
 
     static getLogs(req, res) {

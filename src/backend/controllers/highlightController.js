@@ -572,39 +572,17 @@ class HighlightController {
     // Get published highlights
     static async getPublishedHighlights(req, res) {
         try {
+            const highlights = await Highlight.find({ status: 'published' })
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
+                .sort({ publishedAt: -1 });
+
             res.json({
                 success: true,
                 message: "Published highlights retrieved successfully",
                 data: {
-                    highlights: [
-                        {
-                            _id: "507f1f77bcf86cd799439011",
-                            title: "Tournament Finals Ace",
-                            description: "Incredible ace in the tournament finals",
-                            videoUrl: "https://example.com/video1.mp4",
-                            thumbnailUrl: "https://example.com/thumb1.jpg",
-                            game: "valorant",
-                            category: "moments",
-                            tags: ["ace", "finals", "clutch"],
-                            duration: 60,
-                            status: "published",
-                            publishedAt: new Date().toISOString()
-                        },
-                        {
-                            _id: "507f1f77bcf86cd799439012",
-                            title: "Perfect Team Fight",
-                            description: "Flawless team coordination",
-                            videoUrl: "https://example.com/video2.mp4",
-                            thumbnailUrl: "https://example.com/thumb2.jpg",
-                            game: "lol",
-                            category: "teamplay",
-                            tags: ["teamfight", "coordination"],
-                            duration: 40,
-                            status: "published",
-                            publishedAt: new Date(Date.now() - 3600000).toISOString()
-                        }
-                    ],
-                    total: 2
+                    highlights,
+                    total: highlights.length
                 }
             });
         } catch (error) {
@@ -619,29 +597,21 @@ class HighlightController {
     // Get trending highlights
     static async getTrendingHighlights(req, res) {
         try {
+            const highlights = await Highlight.find({ 
+                status: 'published',
+                views: { $gte: 1000 } // Trending highlights have high views
+            })
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
+                .sort({ views: -1, publishedAt: -1 })
+                .limit(10);
+
             res.json({
                 success: true,
                 message: "Trending highlights retrieved successfully",
                 data: {
-                    highlights: [
-                        {
-                            _id: "507f1f77bcf86cd799439011",
-                            title: "Viral Clutch Play",
-                            description: "This clutch is going viral!",
-                            videoUrl: "https://example.com/trending1.mp4",
-                            thumbnailUrl: "https://example.com/trend1.jpg",
-                            game: "valorant",
-                            category: "moments",
-                            tags: ["clutch", "viral", "trending"],
-                            duration: 35,
-                            views: 15000,
-                            likes: 2500,
-                            shares: 450,
-                            status: "published",
-                            publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
-                        }
-                    ],
-                    total: 1
+                    highlights,
+                    total: highlights.length
                 }
             });
         } catch (error) {
