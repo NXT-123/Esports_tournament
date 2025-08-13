@@ -70,44 +70,71 @@ class AuthController {
                 });
             }
 
-            // Check if user already exists in mock data
-            const existingUser = this.findMockUser(email);
-            if (existingUser) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'User with this email already exists'
+            // Check if running in mock mode
+            if (global.mockMode) {
+                // Check if user already exists in mock data
+                const existingUser = this.findMockUser(email);
+                if (existingUser) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'User with this email already exists'
+                    });
+                }
+
+                // Hash password
+                const passwordHash = await bcrypt.hash(password, 10);
+
+                // Create new user object
+                const newUser = {
+                    _id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    email,
+                    fullName,
+                    passwordHash,
+                    role,
+                    avatarUrl: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=150&h=150&fit=crop&crop=face`
+                };
+
+                console.log('Creating new user in mock mode:', { email, fullName, role });
+
+                // Add user to mock data file
+                const mockDataPath = path.join(__dirname, '../data/users.json');
+                const mockUsers = this.getMockUsers();
+                mockUsers.push(newUser);
+
+                console.log('Writing to file:', mockDataPath);
+                console.log('Total users after adding:', mockUsers.length);
+
+                // Write back to file
+                fs.writeFileSync(mockDataPath, JSON.stringify(mockUsers, null, 4), 'utf8');
+                console.log('File written successfully');
+
+                // Store user in memory for authentication
+                this.storeMockUserInMemory(newUser._id, newUser);
+            } else {
+                // Check if user already exists in database
+                const existingUser = await User.findOne({ email });
+                if (existingUser) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'User with this email already exists'
+                    });
+                }
+
+                // Hash password
+                const passwordHash = await bcrypt.hash(password, 10);
+
+                // Create new user in database
+                const newUser = new User({
+                    email,
+                    fullName,
+                    passwordHash,
+                    role,
+                    avatarUrl: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=150&h=150&fit=crop&crop=face`
                 });
+
+                await newUser.save();
+                console.log('User created in database:', { email, fullName, role });
             }
-
-            // Hash password
-            const passwordHash = await bcrypt.hash(password, 10);
-
-            // Create new user object
-            const newUser = {
-                _id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                email,
-                fullName,
-                passwordHash,
-                role,
-                avatarUrl: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=150&h=150&fit=crop&crop=face`
-            };
-
-            console.log('Creating new user:', { email, fullName, role });
-
-            // Add user to mock data file
-            const mockDataPath = path.join(__dirname, '../data/users.json');
-            const mockUsers = this.getMockUsers();
-            mockUsers.push(newUser);
-
-            console.log('Writing to file:', mockDataPath);
-            console.log('Total users after adding:', mockUsers.length);
-
-            // Write back to file
-            fs.writeFileSync(mockDataPath, JSON.stringify(mockUsers, null, 4), 'utf8');
-            console.log('File written successfully');
-
-            // Store user in memory for authentication
-            this.storeMockUserInMemory(newUser._id, newUser);
 
             // Generate tokens
             const token = generateToken(newUser._id);
@@ -148,37 +175,70 @@ class AuthController {
                 });
             }
 
-            // Find user in mock data
-            const mockUser = AuthController.findMockUser(email);
+            let user;
             
-            if (!mockUser) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc đăng ký tài khoản mới.'
-                });
+            if (global.mockMode) {
+                // Find user in mock data
+                const mockUser = AuthController.findMockUser(email);
+                
+                if (!mockUser) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc đăng ký tài khoản mới.'
+                    });
+                }
+
+                // Verify password using bcrypt
+                const isPasswordValid = await bcrypt.compare(password, mockUser.passwordHash);
+                
+                if (!isPasswordValid) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Mật khẩu không đúng. Vui lòng nhập lại mật khẩu.'
+                    });
+                }
+
+                // Create user object for response
+                user = {
+                    _id: mockUser._id,
+                    email: mockUser.email,
+                    fullName: mockUser.fullName,
+                    role: mockUser.role,
+                    avatarUrl: mockUser.avatarUrl
+                };
+
+                // Store user in memory for authentication middleware
+                AuthController.storeMockUserInMemory(user._id, user);
+            } else {
+                // Find user in database
+                const dbUser = await User.findOne({ email });
+                
+                if (!dbUser) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc đăng ký tài khoản mới.'
+                    });
+                }
+
+                // Verify password using bcrypt
+                const isPasswordValid = await bcrypt.compare(password, dbUser.passwordHash);
+                
+                if (!isPasswordValid) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Mật khẩu không đúng. Vui lòng nhập lại mật khẩu.'
+                    });
+                }
+
+                // Create user object for response
+                user = {
+                    _id: dbUser._id,
+                    email: dbUser.email,
+                    fullName: dbUser.fullName,
+                    role: dbUser.role,
+                    avatarUrl: dbUser.avatarUrl
+                };
             }
-
-            // Verify password using bcrypt
-            const isPasswordValid = await bcrypt.compare(password, mockUser.passwordHash);
-            
-            if (!isPasswordValid) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Mật khẩu không đúng. Vui lòng nhập lại mật khẩu.'
-                });
-            }
-
-            // Create user object for response
-            const user = {
-                _id: mockUser._id,
-                email: mockUser.email,
-                fullName: mockUser.fullName,
-                role: mockUser.role,
-                avatarUrl: mockUser.avatarUrl
-            };
-
-            // Store user in memory for authentication middleware
-            AuthController.storeMockUserInMemory(user._id, user);
 
             // Generate tokens with role information
             const token = generateToken(user._id, user.role);

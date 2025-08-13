@@ -1,21 +1,26 @@
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        // Skip MongoDB connection and use JSON files directly
-        console.log('Skipping MongoDB connection, using JSON files');
-        console.log('Server will run with JSON file data responses.');
-        
-        // Set a flag to indicate we're running with JSON files
+        // Connect to MongoDB
+        const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tournament_db', {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000, // 5 seconds timeout
+            connectTimeoutMS: 5000,
+            socketTimeoutMS: 5000,
+        });
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
         global.mockMode = false;
-        console.log('Using JSON files for data storage');
-        return false;
+        return true;
     } catch (error) {
-        console.warn('Database setup error:', error.message);
+        console.warn('MongoDB connection failed:', error.message);
         console.log('Server will run with JSON file data responses.');
         
-        global.mockMode = false;
-        console.log('Using JSON files for data storage');
+        // Set a flag to indicate we're running in mock mode
+        global.mockMode = true;
+        console.log('Mock mode enabled, using JSON files');
         return false;
     }
 };

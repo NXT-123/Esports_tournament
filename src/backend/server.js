@@ -3,7 +3,8 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-// Import config
+// Import database connection
+const connectDB = require('./config/database');
 const config = require('./config/config');
 
 // Import routes
@@ -18,9 +19,20 @@ const userRoutes = require('./routes/userRoutes');
 const app = express();
 const port = config.port;
 
-// Initialize server
-console.log('Server running with JSON file data storage');
-global.mockMode = false;
+// Connect to MongoDB
+(async () => {
+    try {
+        const connected = await connectDB();
+        if (connected) {
+            console.log('Server running with MongoDB connection');
+        } else {
+            console.log('Server running in mock mode with JSON files');
+        }
+    } catch (error) {
+        console.error('Database connection error:', error);
+        console.log('Server running in mock mode with JSON files');
+    }
+})();
 
 // Middleware
 app.use(cors());
