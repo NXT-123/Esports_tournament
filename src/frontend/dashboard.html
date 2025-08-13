@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="../assets/styles/components.css" />
   <link rel="stylesheet" href="../assets/styles/layout.css" />
   <link rel="stylesheet" href="../assets/styles/dashboard.css" />
+  <link rel="stylesheet" href="../assets/styles/carousel.css" />
 </head>
 <body>
   <!-- Header Navigation -->
@@ -69,12 +70,12 @@
       <div class="section-header">
         <h2 class="section-title">Các giải đấu đang diễn ra</h2>
         <div class="section-controls">
-          <button class="nav-arrow nav-arrow-left">
+          <button class="nav-arrow nav-arrow-left" data-carousel-prev="tournamentContainer">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
               <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <button class="nav-arrow nav-arrow-right">
+          <button class="nav-arrow nav-arrow-right" data-carousel-next="tournamentContainer">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
               <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -83,102 +84,76 @@
       </div>
       
       <div class="tournament-carousel">
-        <div class="tournament-container">
-          <div class="tournament-card">
-            <div class="tournament-image"></div>
-          </div>
-          <div class="tournament-card">
-            <div class="tournament-image"></div>
-          </div>
-          <div class="tournament-card">
-            <div class="tournament-image"></div>
-          </div>
+        <div class="tournament-container" id="tournamentContainer">
+          <div class="loading-placeholder">Đang tải giải đấu...</div>
         </div>
       </div>
       
-      <div class="carousel-indicator">
-        <div class="indicator-dots">
-          <div class="dot active"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
+              <div class="carousel-indicator">
+          <div class="indicator-dots" data-carousel-dots="tournamentContainer">
+            <div class="dot active"></div>
+          </div>
         </div>
-      </div>
     </section>
 
     <!-- News Section -->
     <section class="news-section">
       <div class="section-container">
-        <h2 class="section-title">TIN TỨC MỚI NHẤT</h2>
-        <div class="news-grid">
-          <div class="news-card">
-            <div class="news-image"></div>
-          </div>
-          <div class="news-card">
-            <div class="news-image"></div>
-          </div>
-          <div class="news-card">
-            <div class="news-image"></div>
+        <div class="section-header">
+          <h2 class="section-title">TIN TỨC MỚI NHẤT</h2>
+          <div class="section-controls">
+            <button class="nav-arrow nav-arrow-left" data-carousel-prev="newsContainer">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="nav-arrow nav-arrow-right" data-carousel-next="newsContainer">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
-        <div class="search-icon">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <path d="M35 35L27.75 27.75M31.6667 18.3333C31.6667 25.6971 25.6971 31.6667 18.3333 31.6667C10.9695 31.6667 5 25.6971 5 18.3333C5 10.9695 10.9695 5 18.3333 5C25.6971 5 31.6667 10.9695 31.6667 18.3333Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <div class="news-carousel">
+          <div class="news-container" id="newsContainer">
+            <div class="loading-placeholder">Đang tải tin tức...</div>
+          </div>
+        </div>
+        <div class="carousel-indicator">
+          <div class="indicator-dots" data-carousel-dots="newsContainer">
+            <div class="dot active"></div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Highlights Section -->
     <section class="highlights-section">
-      <div class="highlights-container">
+      <div class="section-header">
         <h2 class="section-title">HIGHLIGHT NỔI BẬT</h2>
-        <div class="highlights-content">
-          <div class="highlights-list">
-            <div class="highlight-item"></div>
-            <div class="highlight-item"></div>
-            <div class="highlight-item"></div>
-            <div class="highlight-item"></div>
-            <div class="highlight-item"></div>
-            <div class="highlight-item"></div>
-          </div>
-          <div class="highlights-video">
-            <div class="video-player">
-              <div class="video-placeholder"></div>
-              <div class="video-controls">
-                <button class="video-control-btn">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                    <path d="M20 26.6667V20M20 13.3334H20.0167M36.6667 20C36.6667 29.2048 29.2047 36.6667 20 36.6667C10.7952 36.6667 3.33333 29.2048 3.33333 20C3.33333 10.7953 10.7952 3.33337 20 3.33337C29.2047 3.33337 36.6667 10.7953 36.6667 20Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="video-control-btn">
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                    <path d="M11.9165 39V13H16.2498V39H11.9165ZM40.0832 39L20.5832 26L40.0832 13V39ZM35.7498 30.875V21.125L28.3832 26L35.7498 30.875Z" fill="#FEF7FF"/>
-                  </svg>
-                </button>
-                <button class="video-control-btn">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <path d="M10 6L38 24L10 42V6Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="video-control-btn">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <path d="M20 8H12V40H20V8Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M36 8H28V40H36V8Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="video-control-btn">
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                    <path d="M35.7498 39V13H40.0832V39H35.7498ZM11.9165 39V13L31.4165 26L11.9165 39ZM16.2498 30.875L23.6165 26L16.2498 21.125V30.875Z" fill="#FEF7FF"/>
-                  </svg>
-                </button>
-                <button class="video-control-btn">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <path d="M17.18 27.02L30.84 34.98M30.82 13.02L17.18 20.98M42 10C42 13.3137 39.3137 16 36 16C32.6863 16 30 13.3137 30 10C30 6.68629 32.6863 4 36 4C39.3137 4 42 6.68629 42 10ZM18 24C18 27.3137 15.3137 30 12 30C8.68629 30 6 27.3137 6 24C6 20.6863 8.68629 18 12 18C15.3137 18 18 20.6863 18 24ZM42 38C42 41.3137 39.3137 44 36 44C32.6863 44 30 41.3137 30 38C30 34.6863 32.6863 32 36 32C39.3137 32 42 34.6863 42 38Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div class="section-controls">
+          <button class="nav-arrow nav-arrow-left" data-carousel-prev="highlightsContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="nav-arrow nav-arrow-right" data-carousel-next="highlightsContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="highlights-carousel">
+        <div class="highlights-container" id="highlightsContainer">
+          <div class="loading-placeholder">Đang tải highlights...</div>
+        </div>
+      </div>
+      
+      <div class="carousel-indicator">
+        <div class="indicator-dots" data-carousel-dots="highlightsContainer">
+          <div class="dot active"></div>
         </div>
       </div>
     </section>
@@ -299,7 +274,10 @@
   </footer>
 
   <!-- Scripts -->
-  <script>
+  <script type="module">
+    import { apiCall, API_ENDPOINTS } from './js/api.js';
+    import { createCarousel } from './js/carousel.js';
+    
     // Dashboard functionality
     document.addEventListener('DOMContentLoaded', function() {
       // Follow button functionality
@@ -315,14 +293,6 @@
         });
       });
 
-      // Carousel navigation
-      document.querySelectorAll('.nav-arrow').forEach(arrow => {
-        arrow.addEventListener('click', function() {
-          // Simulate carousel navigation
-          console.log('Carousel navigation clicked');
-        });
-      });
-
       // Organizer card click functionality
       document.querySelectorAll('.organizer-card .organizer-image').forEach(card => {
         card.addEventListener('click', function() {
@@ -330,7 +300,112 @@
           window.location.href = './organizer-detail.html';
         });
       });
+
+      // Load dynamic content
+      loadTournaments();
+      loadNews();
+      loadHighlights();
     });
+
+    // Global carousel instances
+    let tournamentCarousel, newsCarousel, highlightsCarousel;
+
+    async function loadTournaments() {
+      try {
+        // Thử lấy giải đang diễn ra trước
+        let res = await apiCall(API_ENDPOINTS.TOURNAMENTS.ONGOING, {}, 'GET');
+        let tournaments = res?.data?.tournaments || [];
+        
+        // Nếu không có thì fallback sang giải sắp diễn ra
+        if (!tournaments.length) {
+          res = await apiCall(API_ENDPOINTS.TOURNAMENTS.UPCOMING, {}, 'GET');
+          tournaments = res?.data?.tournaments || [];
+        }
+        
+        if (!tournaments.length) {
+          const container = document.getElementById('tournamentContainer');
+          if (container) {
+            container.innerHTML = '<div class="loading-placeholder">Chưa có giải đấu</div>';
+          }
+          return;
+        }
+        
+        // Create tournament carousel
+        tournamentCarousel = createCarousel('tournament', 'tournamentContainer', {
+          itemsPerPage: 1
+        });
+        tournamentCarousel.setItems(tournaments);
+        
+      } catch (e) {
+        console.error('Error loading tournaments:', e);
+        const container = document.getElementById('tournamentContainer');
+        if (container) {
+          container.innerHTML = '<div class="loading-placeholder">Lỗi tải giải đấu</div>';
+        }
+      }
+    }
+
+
+
+
+
+    async function loadNews() {
+      try {
+        const res = await apiCall(API_ENDPOINTS.NEWS.PUBLISHED, {}, 'GET');
+        let news = res?.data?.news || [];
+        
+        if (!news.length) {
+          const container = document.getElementById('newsContainer');
+          if (container) {
+            container.innerHTML = '<div class="loading-placeholder">Chưa có tin tức</div>';
+          }
+          return;
+        }
+        
+        // Create news carousel
+        newsCarousel = createCarousel('news', 'newsContainer', {
+          itemsPerPage: 1
+        });
+        newsCarousel.setItems(news);
+        
+      } catch (e) {
+        console.error('Error loading news:', e);
+        const container = document.getElementById('newsContainer');
+        if (container) {
+          container.innerHTML = '<div class="loading-placeholder">Lỗi tải tin tức</div>';
+        }
+      }
+    }
+
+    async function loadHighlights() {
+      try {
+        const res = await apiCall(API_ENDPOINTS.HIGHLIGHTS.PUBLISHED, {}, 'GET');
+        let highlights = res?.data?.highlights || [];
+        
+        if (!highlights.length) {
+          const container = document.getElementById('highlightsContainer');
+          if (container) {
+            container.innerHTML = '<div class="loading-placeholder">Chưa có highlights</div>';
+          }
+          return;
+        }
+        
+        // Create highlights carousel
+        highlightsCarousel = createCarousel('highlight', 'highlightsContainer', {
+          itemsPerPage: 1
+        });
+        highlightsCarousel.setItems(highlights);
+        
+      } catch (e) {
+        console.error('Error loading highlights:', e);
+        const container = document.getElementById('highlightsContainer');
+        if (container) {
+          container.innerHTML = '<div class="loading-placeholder">Lỗi tải highlights</div>';
+        }
+      }
+    }
+
+
   </script>
 </body>
 </html>

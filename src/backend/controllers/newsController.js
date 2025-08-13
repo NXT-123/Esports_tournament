@@ -1,6 +1,20 @@
 const News = require('../models/News');
+const fs = require('fs');
+const path = require('path');
 
 class NewsController {
+    // Get mock news data
+    static getMockNews() {
+        try {
+            const mockDataPath = path.join(__dirname, '../data/news.json');
+            const mockData = fs.readFileSync(mockDataPath, 'utf8');
+            return JSON.parse(mockData);
+        } catch (error) {
+            console.error('Error reading mock news data:', error);
+            return [];
+        }
+    }
+
     // Create new news article
     static async createNews(req, res) {
         try {
@@ -57,7 +71,9 @@ class NewsController {
             const query = { status: 'public' };
 
             // Add filters
-            if (tournamentId) query.tournamentId = tournamentId;
+            if (tournamentId) {
+                query.tournamentId = tournamentId;
+            }
             if (search) {
                 query.$or = [
                     { title: { $regex: search, $options: 'i' } },
@@ -68,7 +84,7 @@ class NewsController {
             const news = await News.find(query)
                 .populate('authorId', 'fullName email')
                 .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1, _id: -1 })
+                .sort({ createdAt: -1 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -277,7 +293,7 @@ class NewsController {
             const news = await News.find({ status: 'public' })
                 .populate('authorId', 'fullName email')
                 .populate('tournamentId', 'name status')
-                .sort({ publishedAt: -1, _id: -1 })
+                .sort({ createdAt: -1 })
                 .limit(parseInt(limit));
 
             res.json({
@@ -469,36 +485,24 @@ class NewsController {
     // Get published news
     static async getPublishedNews(req, res) {
         try {
+            console.log('Getting published news from MongoDB...');
+            const news = await News.find({ status: 'public' })
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ createdAt: -1 });
+
+            console.log('Found', news.length, 'published news articles');
+
             res.json({
                 success: true,
                 message: "Published news retrieved successfully",
                 data: {
-                    news: [
-                        {
-                            _id: "507f1f77bcf86cd799439011",
-                            title: "Tournament Championship Begins",
-                            content: "The annual championship tournament has officially started.",
-                            category: "tournament",
-                            tags: ["tournament", "championship"],
-                            status: "published",
-                            publishedAt: new Date().toISOString(),
-                            authorId: "507f1f77bcf86cd799439012"
-                        },
-                        {
-                            _id: "507f1f77bcf86cd799439012",
-                            title: "New Game Added",
-                            content: "We've added a new game to our tournament lineup.",
-                            category: "announcement",
-                            tags: ["game", "announcement"],
-                            status: "published",
-                            publishedAt: new Date(Date.now() - 3600000).toISOString(),
-                            authorId: "507f1f77bcf86cd799439012"
-                        }
-                    ],
-                    total: 2
+                    news,
+                    total: news.length
                 }
             });
         } catch (error) {
+            console.error('Error in getPublishedNews:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error getting published news',

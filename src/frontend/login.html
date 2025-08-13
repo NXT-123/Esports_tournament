@@ -225,17 +225,51 @@
     });
 
     // Login form submission
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const loginInput = document.getElementById('loginInput').value;
       const passwordInput = document.getElementById('passwordInput').value;
       
-      if (loginInput && passwordInput) {
-        // Simulate login process
-        alert('Đăng nh��p thành công!');
-        window.location.href = './dashboard.html';
-      } else {
+      if (!loginInput || !passwordInput) {
         alert('Vui lòng nhập đầy đủ thông tin!');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: loginInput,
+            password: passwordInput
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Lưu token
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('userRole', data.role);
+          
+          alert('Đăng nhập thành công!');
+          
+          // Chuyển hướng dựa trên role
+          if (data.role === 'admin') {
+            window.location.href = './dashboard.html';
+          } else if (data.role === 'organizer') {
+            window.location.href = './organizer-dashboard.html';
+          } else {
+            window.location.href = './dashboard.html';
+          }
+        } else {
+          alert(data.message || 'Đăng nhập thất bại!');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Lỗi kết nối server!');
       }
     });
 

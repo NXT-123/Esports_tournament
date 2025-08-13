@@ -188,7 +188,9 @@
         </div>
     </footer>
 
-    <script>
+    <script type="module">
+        import { apiCall, API_ENDPOINTS } from './js/api.js';
+
         // Get highlight ID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const highlightId = urlParams.get('id');
@@ -208,19 +210,59 @@
         });
         
         // Load highlight data
-        function loadHighlightData(id) {
-            // In a real application, you would fetch data from the server
-            console.log('Loading highlight data for ID:', id);
-            
-            // Sample data loading
-            document.querySelector('.tournament-input').value = 'Giải đấu mẫu';
-            document.querySelector('.highlight-description').value = 'Đây là mô tả cho highlight này...';
+        async function loadHighlightData(id) {
+            if (!id) {
+                console.error('No highlight ID provided');
+                return;
+            }
+
+            try {
+                const response = await apiCall(API_ENDPOINTS.HIGHLIGHTS.BY_ID(id), {}, 'GET');
+                
+                if (response.success && response.data.highlight) {
+                    const highlight = response.data.highlight;
+                    
+                    // Update page title
+                    document.title = `${highlight.title} - Tournament Manager`;
+                    
+                    // Update highlight title
+                    const titleElement = document.querySelector('.highlight-title');
+                    if (titleElement) {
+                        titleElement.textContent = highlight.title;
+                    }
+                    
+                    // Update description
+                    const descriptionElement = document.querySelector('.highlight-description');
+                    if (descriptionElement) {
+                        descriptionElement.textContent = highlight.description || '';
+                    }
+                    
+                    // Update video URL if available
+                    if (highlight.videoUrl) {
+                        const videoElement = document.querySelector('.video-player');
+                        if (videoElement) {
+                            videoElement.innerHTML = `
+                                <video controls>
+                                    <source src="${highlight.videoUrl}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            `;
+                        }
+                    }
+                } else {
+                    console.error('Failed to load highlight details');
+                }
+            } catch (error) {
+                console.error('Error loading highlight details:', error);
+            }
         }
         
         // Initialize page
-        if (highlightId) {
-            loadHighlightData(highlightId);
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (highlightId) {
+                loadHighlightData(highlightId);
+            }
+        });
     </script>
 </body>
 </html>

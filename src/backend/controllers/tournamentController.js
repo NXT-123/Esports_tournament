@@ -1,8 +1,48 @@
 const Tournament = require('../models/Tournament');
-const Competitor = require('../models/Competitor');
-const Match = require('../models/Match');
+const fs = require('fs');
+const path = require('path');
 
 class TournamentController {
+    // Get mock tournaments data
+    static getMockTournaments() {
+        try {
+            const mockDataPath = path.join(__dirname, '../data/tournaments.json');
+            const mockData = fs.readFileSync(mockDataPath, 'utf8');
+            return JSON.parse(mockData);
+        } catch (error) {
+            console.error('Error reading mock tournaments data:', error);
+            return [];
+        }
+    }
+
+    // Get tournament by ID
+    static async getTournamentById(req, res) {
+        try {
+            const { id } = req.params;
+            const tournaments = this.getMockTournaments();
+            const tournament = tournaments.find(t => t._id === id);
+
+            if (!tournament) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Tournament not found'
+                });
+            }
+
+            res.json({
+                success: true,
+                message: 'Tournament retrieved successfully',
+                data: { tournament }
+            });
+        } catch (error) {
+            console.error('Get tournament by ID error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error while fetching tournament'
+            });
+        }
+    }
+
     // Create new tournament
     static async createTournament(req, res) {
         try {
@@ -86,62 +126,6 @@ class TournamentController {
     // Get all tournaments with filtering and pagination
     static async getAllTournaments(req, res) {
         try {
-            // Check if running in mock mode
-            if (global.mockMode) {
-                // Return mock tournament data
-                const mockTournaments = [
-                    {
-                        _id: 'mock_tournament_1',
-                        name: 'Mock Tournament 1',
-                        format: 'Single Elimination',
-                        description: 'A mock tournament for testing',
-                        gameName: 'Mock Game',
-                        organizerId: {
-                            _id: 'mock_organizer_1',
-                            fullName: 'Mock Organizer',
-                            email: 'organizer@esport.com'
-                        },
-                        startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-                        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
-                        maxPlayers: 32,
-                        numberOfPlayers: 16,
-                        status: 'upcoming',
-                        avatarUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=200&fit=crop'
-                    },
-                    {
-                        _id: 'mock_tournament_2',
-                        name: 'Mock Tournament 2',
-                        format: 'Double Elimination',
-                        description: 'Another mock tournament for testing',
-                        gameName: 'Mock Game 2',
-                        organizerId: {
-                            _id: 'mock_organizer_2',
-                            fullName: 'Mock Organizer 2',
-                            email: 'organizer2@esport.com'
-                        },
-                        startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-                        endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
-                        maxPlayers: 16,
-                        numberOfPlayers: 8,
-                        status: 'upcoming',
-                        avatarUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=200&fit=crop'
-                    }
-                ];
-
-                res.json({
-                    success: true,
-                    data: {
-                        tournaments: mockTournaments,
-                        pagination: {
-                            current: 1,
-                            pages: 1,
-                            total: 2
-                        }
-                    }
-                });
-                return;
-            }
-
             const {
                 page = 1,
                 limit = 10,
@@ -659,8 +643,8 @@ class TournamentController {
     // Get ongoing tournaments
     static async getOngoingTournaments(req, res) {
         try {
-            const now2 = new Date();
-            const tournaments = await Tournament.find({ status: 'ongoing', startDate: { $lte: now2 } })
+            const now = new Date();
+            const tournaments = await Tournament.find({ status: 'ongoing', startDate: { $lte: now } })
                 .populate('organizerId', 'fullName email');
 
             res.json({

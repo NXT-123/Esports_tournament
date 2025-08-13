@@ -1,5 +1,6 @@
 import { loadTranslations } from '../lang.js';
 import { apiCall, API_ENDPOINTS } from '../api.js';
+import { createCarousel } from '../carousel.js';
 
 export async function renderGuestView() {
   document.body.innerHTML = `
@@ -57,19 +58,24 @@ export async function renderGuestView() {
         <div class="hero-container">
           <h1 class="hero-title">Các giải đấu đang diễn ra</h1>
           <div class="tournament-carousel">
-            <button class="carousel-btn prev-btn">
+            <button class="carousel-btn prev-btn" data-carousel-prev="tournamentCarousel">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <div id="tournamentCarousel" class="carousel-content">
+            <div class="carousel-container" id="tournamentCarousel">
               <div class="loading-placeholder">Loading tournaments...</div>
             </div>
-            <button class="carousel-btn next-btn">
+            <button class="carousel-btn next-btn" data-carousel-next="tournamentCarousel">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
+            <div class="carousel-indicator">
+              <div class="indicator-dots" data-carousel-dots="tournamentCarousel">
+                <div class="dot active"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -86,21 +92,24 @@ export async function renderGuestView() {
             </button>
           </div>
           <div class="news-carousel">
-            <button class="news-nav-btn news-prev-btn">
+            <button class="carousel-btn prev-btn" data-carousel-prev="newsList">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <div class="news-container">
-              <div id="newsList" class="news-grid">
-                <div class="loading-placeholder">Loading news...</div>
-              </div>
+            <div class="carousel-container" id="newsList">
+              <div class="loading-placeholder">Loading news...</div>
             </div>
-            <button class="news-nav-btn news-next-btn">
+            <button class="carousel-btn next-btn" data-carousel-next="newsList">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
+            <div class="carousel-indicator">
+              <div class="indicator-dots" data-carousel-dots="newsList">
+                <div class="dot active"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -110,9 +119,24 @@ export async function renderGuestView() {
         <div class="section-container">
           <h2 class="section-title highlight-title" style="color: #fff; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000, 0px 0px 4px #000; font-weight: 800; font-size: 2.5rem; letter-spacing: 1px;">HIGHLIGHT NÓNG THỔI</h2>
           <div class="highlights-content">
-            <div class="highlights-list">
-              <div id="highlightsList">
+            <div class="highlights-carousel">
+              <button class="carousel-btn prev-btn" data-carousel-prev="highlightsList">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="carousel-container" id="highlightsList">
                 <div class="loading-placeholder">Loading highlights...</div>
+              </div>
+              <button class="carousel-btn next-btn" data-carousel-next="highlightsList">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="carousel-indicator">
+                <div class="indicator-dots" data-carousel-dots="highlightsList">
+                  <div class="dot active"></div>
+                </div>
               </div>
             </div>
             <div class="featured-highlight">
@@ -295,6 +319,11 @@ export async function renderGuestView() {
   await loadHighlights();
 }
 
+// Tournament carousel functionality
+let currentTournamentPage = 0;
+let tournaments = [];
+const tournamentsPerPage = 3;
+
 // Tải giải đấu từ backend (đang diễn ra, fallback sang sắp diễn ra)
 async function loadTournaments() {
   const container = document.getElementById('tournamentCarousel');
@@ -312,33 +341,19 @@ async function loadTournaments() {
       container.innerHTML = '<div class="loading-placeholder">Chưa có giải đấu</div>';
       return;
     }
-    container.innerHTML = `
-      <div class="carousel-slider">
-        ${tournaments.map(t => `
-          <div class="tournament-slide">
-            <div class="tournament-card-hero">
-              <div class="tournament-image" style="background-image:url('${t.avatarUrl || ''}')"></div>
-              <div class="tournament-info">
-                <h3 class="tournament-name">${t.name}</h3>
-                <p class="tournament-desc">${t.description || ''}</p>
-                <div class="tournament-badges">
-                  <span class="status-badge status-${t.status}">${t.status}</span>
-                  <span class="format-badge">${t.format || ''}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    
+    // Create tournament carousel
+    const tournamentCarousel = createCarousel('tournament', 'tournamentCarousel', {
+      itemsPerPage: 3
+    });
+    tournamentCarousel.setItems(tournaments);
   } catch (e) {
+    console.error('Error loading tournaments:', e);
     container.innerHTML = '<div class="loading-placeholder">Lỗi tải giải đấu</div>';
   }
 }
 
-let currentNewsPage = 0;
-const newsPerPage = 3;
-let allNews = [];
+// News carousel functionality
 
 // Tải tin tức từ backend
 async function loadNews() {
@@ -351,93 +366,21 @@ async function loadNews() {
       container.innerHTML = '<div class="loading-placeholder">Chưa có tin tức</div>';
       return;
     }
-    container.innerHTML = news.map(n => `
-      <div class="news-card-new">
-        <div class="news-image" style="background-image:url('${(n.images && n.images[0]) || ''}');"></div>
-        <div class="news-content-new">
-          <h4 class="news-title-new">${n.title}</h4>
-          <p class="news-excerpt">${(n.content || '').substring(0, 100)}...</p>
-          <div class="news-meta-new">
-            <span class="news-date">${n.publishedAt ? new Date(n.publishedAt).toLocaleDateString() : ''}</span>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    
+    // Create news carousel
+    const newsCarousel = createCarousel('news', 'newsList', {
+      itemsPerPage: 3
+    });
+    newsCarousel.setItems(news);
   } catch (e) {
+    console.error('Error loading news:', e);
     container.innerHTML = '<div class="loading-placeholder">Lỗi tải tin tức</div>';
   }
 }
 
-function displayNewsPage(page) {
-  const newsList = document.getElementById('newsList');
-  const startIndex = page * newsPerPage;
-  const endIndex = startIndex + newsPerPage;
-  const newsToShow = allNews.slice(startIndex, endIndex);
 
-  if (newsToShow.length === 0) return;
 
-  // Add fade out effect
-  newsList.style.opacity = '0';
 
-  setTimeout(() => {
-    newsList.innerHTML = newsToShow.map(newsItem => `
-      <div class="news-card-new">
-        <div class="news-image" style="background-image:url('${newsItem.images[0]}');"></div>
-        <div class="news-content-new">
-          <h4 class="news-title-new">${newsItem.title}</h4>
-          <p class="news-excerpt">${newsItem.content.substring(0, 100)}...</p>
-          <div class="news-meta-new">
-            <span class="news-date">${new Date(newsItem.publishedAt).toLocaleDateString()}</span>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    // Fade in effect
-    newsList.style.opacity = '1';
-
-    // Update button states
-    updateNewsNavigationButtons();
-  }, 150);
-}
-
-function setupNewsNavigation() {
-  const prevBtn = document.querySelector('.news-prev-btn');
-  const nextBtn = document.querySelector('.news-next-btn');
-
-  if (prevBtn && nextBtn) {
-    prevBtn.addEventListener('click', () => {
-      if (currentNewsPage > 0) {
-        currentNewsPage--;
-        displayNewsPage(currentNewsPage);
-      }
-    });
-
-    nextBtn.addEventListener('click', () => {
-      const maxPage = Math.ceil(allNews.length / newsPerPage) - 1;
-      if (currentNewsPage < maxPage) {
-        currentNewsPage++;
-        displayNewsPage(currentNewsPage);
-      }
-    });
-  }
-}
-
-function updateNewsNavigationButtons() {
-  const prevBtn = document.querySelector('.news-prev-btn');
-  const nextBtn = document.querySelector('.news-next-btn');
-  const maxPage = Math.ceil(allNews.length / newsPerPage) - 1;
-
-  if (prevBtn) {
-    prevBtn.style.opacity = currentNewsPage > 0 ? '1' : '0.5';
-    prevBtn.style.pointerEvents = currentNewsPage > 0 ? 'auto' : 'none';
-  }
-
-  if (nextBtn) {
-    nextBtn.style.opacity = currentNewsPage < maxPage ? '1' : '0.5';
-    nextBtn.style.pointerEvents = currentNewsPage < maxPage ? 'auto' : 'none';
-  }
-}
 
 // Tải highlight từ backend
 async function loadHighlights() {
@@ -450,19 +393,14 @@ async function loadHighlights() {
       container.innerHTML = '<div class="loading-placeholder">Chưa có highlight</div>';
       return;
     }
-    container.innerHTML = highlights.map(h => `
-      <div class="highlight-item">
-        <div class="highlight-thumbnail"></div>
-        <div class="highlight-info">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <h5 class="highlight-name" style="margin: 0;">${h.title}</h5>
-            ${h.videoUrl ? `<a href="${h.videoUrl}" target="_blank" class="watch-btn">Xem video</a>` : ''}
-          </div>
-          <p class="highlight-desc">${h.description || ''}</p>
-        </div>
-      </div>
-    `).join('');
+    
+    // Create highlights carousel
+    const highlightsCarousel = createCarousel('highlight', 'highlightsList', {
+      itemsPerPage: 3
+    });
+    highlightsCarousel.setItems(highlights);
   } catch (e) {
+    console.error('Error loading highlights:', e);
     container.innerHTML = '<div class="loading-placeholder">Lỗi tải highlight</div>';
   }
 }

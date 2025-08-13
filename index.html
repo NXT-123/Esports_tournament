@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="./src/assets/styles/components.css" />
   <link rel="stylesheet" href="./src/assets/styles/layout.css" />
   <link rel="stylesheet" href="./src/assets/styles/guest-new.css" />
+  <link rel="stylesheet" href="./src/assets/styles/carousel.css" />
   
   <style>
     /* Loading screen styles */
@@ -173,25 +174,25 @@
         // Listen for backend events
         window.addEventListener('backendReady', () => {
           updateStatus('✅ Backend server đã sẵn sàng!');
-          setTimeout(startApp, 500);
+          setTimeout(startApp, 1000);
         });
 
         window.addEventListener('backendUnavailable', () => {
-          showError('Không thể kết nối đến backend server. Vui lòng khởi động thủ công.');
+          showError('Không thể kết nối đến backend server. Vui lòng khởi động thủ công:<br><br>1. Mở Terminal<br>2. Chạy: <code>cd src/backend</code><br>3. Chạy: <code>node server.js</code><br>4. Reload trang này');
         });
 
         // Wait for backend initialization to complete
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         // Check if backend is running
         if (backendStarter.getStatus().isRunning) {
           updateStatus('✅ Backend server đã sẵn sàng!');
-          setTimeout(startApp, 500);
+          setTimeout(startApp, 1000);
         } else {
-          // If no backend event fired, show error
+          // If no backend event fired, show error after timeout
           setTimeout(() => {
             if (!backendStarter.getStatus().isRunning) {
-              showError('Backend server chưa chạy. Cần khởi động thủ công.');
+              showError('Backend server chưa chạy. Vui lòng khởi động thủ công:<br><br>1. Mở Terminal<br>2. Chạy: <code>cd src/backend</code><br>3. Chạy: <code>node server.js</code><br>4. Reload trang này');
             }
           }, 5000);
         }

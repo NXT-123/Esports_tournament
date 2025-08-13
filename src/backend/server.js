@@ -22,15 +22,11 @@ const port = config.port;
 // Connect to MongoDB
 (async () => {
     try {
-        const connected = await connectDB();
-        if (connected) {
-            console.log('Server running with database connection');
-        } else {
-            console.log('Server running in mock mode');
-        }
+        await connectDB();
+        console.log('Server running with MongoDB connection');
     } catch (error) {
         console.error('Database connection error:', error);
-        console.log('Server running in mock mode');
+        process.exit(1);
     }
 })();
 

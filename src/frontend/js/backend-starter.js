@@ -82,35 +82,50 @@ class BackendStarter {
     async checkExistingServer() {
         console.log('Checking if backend server is already running...');
         
-        const isRunning = await this.checkServerHealth();
-        if (isRunning) {
-            this.isServerRunning = true;
-            this.startHealthCheck();
-            console.log('Backend server is already running!');
-        } else {
-            console.log('Backend server is not running. Please start it manually:');
-            console.log('1. cd src/backend');
-            console.log('2. node server.js');
-            
-            // Show user-friendly message
-            this.showServerStartInstructions();
+        try {
+            const isRunning = await this.checkServerHealth();
+            if (isRunning) {
+                this.isServerRunning = true;
+                this.startHealthCheck();
+                console.log('Backend server is already running!');
+                return true;
+            } else {
+                console.log('Backend server is not running. Please start it manually:');
+                console.log('1. cd src/backend');
+                console.log('2. node server.js');
+                
+                // Show user-friendly message
+                this.showServerStartInstructions();
+                return false;
+            }
+        } catch (error) {
+            console.error('Error checking existing server:', error);
+            return false;
         }
-        
-        return isRunning;
     }
 
     // Check server health
     async checkServerHealth() {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+            
             const response = await fetch('http://localhost:3000/api/health', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                signal: controller.signal
             });
             
+            clearTimeout(timeoutId);
             return response.ok;
         } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Health check timeout - server not responding');
+            } else {
+                console.log('Health check failed:', error.message);
+            }
             return false;
         }
     }
@@ -243,16 +258,23 @@ export const backendStarter = new BackendStarter();
 (async () => {
     console.log('Initializing backend connection...');
     
-    // Try to start or connect to backend
-    const success = await backendStarter.startBackend();
-    
-    if (success) {
-        console.log('✅ Backend server is ready!');
+    try {
+        // Try to start or connect to backend
+        const success = await backendStarter.startBackend();
         
-        // Dispatch event to notify app that backend is ready
-        window.dispatchEvent(new CustomEvent('backendReady'));
-    } else {
-        console.log('❌ Backend server is not available');
+        if (success) {
+            console.log('✅ Backend server is ready!');
+            
+            // Dispatch event to notify app that backend is ready
+            window.dispatchEvent(new CustomEvent('backendReady'));
+        } else {
+            console.log('❌ Backend server is not available');
+            
+            // Dispatch event to notify app that backend is not available
+            window.dispatchEvent(new CustomEvent('backendUnavailable'));
+        }
+    } catch (error) {
+        console.error('Backend initialization error:', error);
         
         // Dispatch event to notify app that backend is not available
         window.dispatchEvent(new CustomEvent('backendUnavailable'));

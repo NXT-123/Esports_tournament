@@ -213,23 +213,32 @@
   <!-- Scripts -->
   <script>
     // Registration form submission
-    document.getElementById('registerForm').addEventListener('submit', function(e) {
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const username = document.getElementById('usernameInput').value;
+      const email = document.getElementById('usernameInput').value;
       const password = document.getElementById('passwordInput').value;
       const confirmPassword = document.getElementById('confirmPasswordInput').value;
-      const displayName = document.getElementById('displayNameInput').value;
+      const fullName = document.getElementById('displayNameInput').value;
       const role = document.querySelector('input[name="role"]:checked')?.value;
       
       // Validation
-      if (!username || !password || !confirmPassword || !displayName || !role) {
+      if (!email || !password || !confirmPassword || !fullName || !role) {
         alert('Vui lòng nhập đầy đủ thông tin!');
         return;
       }
       
+      // Kiểm tra email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Email không hợp lệ!');
+        return;
+      }
+      
       if (password !== confirmPassword) {
-        alert('Mật khẩu xác nhận không khớp!');
+        alert('Mật khẩu xác nhận không khớp! Vui lòng nhập lại.');
+        document.getElementById('confirmPasswordInput').value = '';
+        document.getElementById('confirmPasswordInput').focus();
         return;
       }
       
@@ -238,9 +247,32 @@
         return;
       }
       
-      // Simulate registration process
-      alert('Đăng ký thành công!');
-      window.location.href = './login.html';
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            fullName: fullName,
+            role: role
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Đăng ký thành công! Vui lòng đăng nhập.');
+          window.location.href = './login.html';
+        } else {
+          alert(data.message || 'Đăng ký thất bại!');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        alert('Lỗi kết nối server!');
+      }
     });
   </script>
 </body>

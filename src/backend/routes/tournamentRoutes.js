@@ -1,5 +1,5 @@
 const express = require('express');
-const TournamentController = require('../controllers/TournamentController');
+const TournamentController = require('../controllers/tournamentController');
 const { authenticateToken, authorize, checkTournamentOwnership, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
