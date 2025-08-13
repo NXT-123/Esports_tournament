@@ -68,7 +68,7 @@ class NewsController {
                 search
             } = req.query;
 
-            const query = { status: 'published' };
+            const query = { status: 'public' };
 
             // Add filters
             if (tournamentId) {
@@ -290,7 +290,7 @@ class NewsController {
         try {
             const { limit = 5 } = req.query;
 
-            const news = await News.find({ status: 'published' })
+            const news = await News.find({ status: 'public' })
                 .populate('authorId', 'fullName email')
                 .populate('tournamentId', 'name status')
                 .sort({ publishedAt: -1 })
