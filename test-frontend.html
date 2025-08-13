@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend</title>
+</head>
+<body>
+    <h1>Test Frontend</h1>
+    <div id="news-container">
+        <h2>Tin tức:</h2>
+        <div id="news-list">Đang tải...</div>
+    </div>
+    <div id="tournaments-container">
+        <h2>Giải đấu:</h2>
+        <div id="tournaments-list">Đang tải...</div>
+    </div>
+    <div id="highlights-container">
+        <h2>Highlights:</h2>
+        <div id="highlights-list">Đang tải...</div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            try {
+                // Test news API
+                const newsResponse = await fetch('http://localhost:3000/api/news/published');
+                const newsData = await newsResponse.json();
+                document.getElementById('news-list').innerHTML = `
+                    <p>Status: ${newsResponse.status}</p>
+                    <p>Success: ${newsData.success}</p>
+                    <p>Total news: ${newsData.data?.total || 0}</p>
+                    <pre>${JSON.stringify(newsData, null, 2)}</pre>
+                `;
+
+                // Test tournaments API
+                const tournamentsResponse = await fetch('http://localhost:3000/api/tournaments/upcoming');
+                const tournamentsData = await tournamentsResponse.json();
+                document.getElementById('tournaments-list').innerHTML = `
+                    <p>Status: ${tournamentsResponse.status}</p>
+                    <p>Success: ${tournamentsData.success}</p>
+                    <p>Total tournaments: ${tournamentsData.data?.tournaments?.length || 0}</p>
+                    <pre>${JSON.stringify(tournamentsData, null, 2)}</pre>
+                `;
+
+                // Test highlights API
+                const highlightsResponse = await fetch('http://localhost:3000/api/highlights/published');
+                const highlightsData = await highlightsResponse.json();
+                document.getElementById('highlights-list').innerHTML = `
+                    <p>Status: ${highlightsResponse.status}</p>
+                    <p>Success: ${highlightsData.success}</p>
+                    <p>Total highlights: ${highlightsData.data?.total || 0}</p>
+                    <pre>${JSON.stringify(highlightsData, null, 2)}</pre>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.body.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        testAPI();
+    </script>
+</body>
+</html>
