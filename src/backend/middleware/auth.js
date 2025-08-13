@@ -23,14 +23,7 @@ const authenticateToken = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, config.jwtSecret);
 
-        // Check if running in mock mode
-        if (global.mockMode && global.mockUsers && global.mockUsers.has(decoded.id)) {
-            const mockUser = global.mockUsers.get(decoded.id);
-            req.user = mockUser;
-            return next();
-        }
-
-        // Get user from database (normal mode)
+        // Get user from database
         const user = await User.findById(decoded.id).select('-passwordHash');
         if (!user) {
             return res.status(401).json({
@@ -140,16 +133,10 @@ const optionalAuth = async (req, res, next) => {
             try {
                 const decoded = jwt.verify(token, config.jwtSecret);
                 
-                // Check if running in mock mode
-                if (global.mockMode && global.mockUsers && global.mockUsers.has(decoded.id)) {
-                    const mockUser = global.mockUsers.get(decoded.id);
-                    req.user = mockUser;
-                } else {
-                    // Get user from database
-                    const user = await User.findById(decoded.id).select('-passwordHash');
-                    if (user) {
-                        req.user = user;
-                    }
+                // Get user from database
+                const user = await User.findById(decoded.id).select('-passwordHash');
+                if (user) {
+                    req.user = user;
                 }
             } catch (error) {
                 // Token is invalid, but we continue without user

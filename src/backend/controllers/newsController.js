@@ -1,3 +1,4 @@
+const News = require('../models/News');
 const fs = require('fs');
 const path = require('path');
 
@@ -67,33 +68,32 @@ class NewsController {
                 search
             } = req.query;
 
-            const allNews = this.getMockNews();
-            let filteredNews = allNews.filter(n => n.status === 'published');
+            const query = { status: 'published' };
 
             // Add filters
             if (tournamentId) {
-                filteredNews = filteredNews.filter(n => n.tournamentId === tournamentId);
+                query.tournamentId = tournamentId;
             }
             if (search) {
-                filteredNews = filteredNews.filter(n => 
-                    n.title.toLowerCase().includes(search.toLowerCase()) ||
-                    n.content.toLowerCase().includes(search.toLowerCase())
-                );
+                query.$or = [
+                    { title: { $regex: search, $options: 'i' } },
+                    { content: { $regex: search, $options: 'i' } }
+                ];
             }
 
-            // Sort by publishedAt (newest first)
-            filteredNews.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+            const news = await News.find(query)
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ publishedAt: -1 })
+                .limit(limit * 1)
+                .skip((page - 1) * limit);
 
-            // Pagination
-            const total = filteredNews.length;
-            const startIndex = (page - 1) * limit;
-            const endIndex = startIndex + limit;
-            const paginatedNews = filteredNews.slice(startIndex, endIndex);
+            const total = await News.countDocuments(query);
 
             res.json({
                 success: true,
                 data: {
-                    news: paginatedNews,
+                    news,
                     pagination: {
                         current: parseInt(page),
                         pages: Math.ceil(total / limit),
@@ -290,15 +290,15 @@ class NewsController {
         try {
             const { limit = 5 } = req.query;
 
-            const allNews = this.getMockNews();
-            const featuredNews = allNews
-                .filter(n => n.status === 'published')
-                .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-                .slice(0, parseInt(limit));
+            const news = await News.find({ status: 'published' })
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ publishedAt: -1 })
+                .limit(parseInt(limit));
 
             res.json({
                 success: true,
-                data: { news: featuredNews }
+                data: { news }
             });
         } catch (error) {
             console.error('Get featured news error:', error);
@@ -485,36 +485,24 @@ class NewsController {
     // Get published news
     static async getPublishedNews(req, res) {
         try {
+            console.log('Getting published news from MongoDB...');
+            const news = await News.find({ status: 'published' })
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ publishedAt: -1 });
+
+            console.log('Found', news.length, 'published news articles');
+
             res.json({
                 success: true,
                 message: "Published news retrieved successfully",
                 data: {
-                    news: [
-                        {
-                            _id: "507f1f77bcf86cd799439011",
-                            title: "Tournament Championship Begins",
-                            content: "The annual championship tournament has officially started.",
-                            category: "tournament",
-                            tags: ["tournament", "championship"],
-                            status: "published",
-                            publishedAt: new Date().toISOString(),
-                            authorId: "507f1f77bcf86cd799439012"
-                        },
-                        {
-                            _id: "507f1f77bcf86cd799439012",
-                            title: "New Game Added",
-                            content: "We've added a new game to our tournament lineup.",
-                            category: "announcement",
-                            tags: ["game", "announcement"],
-                            status: "published",
-                            publishedAt: new Date(Date.now() - 3600000).toISOString(),
-                            authorId: "507f1f77bcf86cd799439012"
-                        }
-                    ],
-                    total: 2
+                    news,
+                    total: news.length
                 }
             });
         } catch (error) {
+            console.error('Error in getPublishedNews:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error getting published news',

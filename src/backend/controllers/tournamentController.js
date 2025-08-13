@@ -126,60 +126,6 @@ class TournamentController {
     // Get all tournaments with filtering and pagination
     static async getAllTournaments(req, res) {
         try {
-            // Check if running in mock mode
-            if (global.mockMode) {
-                // Get tournaments from JSON file
-                const tournaments = this.getMockTournaments();
-                
-                const {
-                    page = 1,
-                    limit = 10,
-                    status,
-                    format: formatFilter,
-                    search,
-                    gameName
-                } = req.query;
-
-                let filteredTournaments = [...tournaments];
-
-                // Add filters
-                if (status) {
-                    filteredTournaments = filteredTournaments.filter(t => t.status === status);
-                }
-                if (formatFilter) {
-                    filteredTournaments = filteredTournaments.filter(t => t.format === formatFilter);
-                }
-                if (gameName) {
-                    filteredTournaments = filteredTournaments.filter(t => t.gameName === gameName);
-                }
-                if (search) {
-                    filteredTournaments = filteredTournaments.filter(t => 
-                        t.name.toLowerCase().includes(search.toLowerCase()) ||
-                        t.description.toLowerCase().includes(search.toLowerCase())
-                    );
-                }
-
-                // Pagination
-                const total = filteredTournaments.length;
-                const startIndex = (page - 1) * limit;
-                const endIndex = startIndex + limit;
-                const paginatedTournaments = filteredTournaments.slice(startIndex, endIndex);
-
-                res.json({
-                    success: true,
-                    data: {
-                        tournaments: paginatedTournaments,
-                        pagination: {
-                            current: parseInt(page),
-                            pages: Math.ceil(total / limit),
-                            total
-                        }
-                    }
-                });
-                return;
-            }
-
-            // Use MongoDB
             const {
                 page = 1,
                 limit = 10,
@@ -676,25 +622,15 @@ class TournamentController {
     // Get upcoming tournaments
     static async getUpcomingTournaments(req, res) {
         try {
-            if (global.mockMode) {
-                const tournaments = this.getMockTournaments();
-                const upcomingTournaments = tournaments.filter(t => t.status === 'upcoming').slice(0, 10);
+            const now = new Date();
+            const tournaments = await Tournament.find({ status: 'upcoming', startDate: { $gte: now } })
+                .populate('organizerId', 'fullName email')
+                .limit(10);
 
-                res.json({
-                    success: true,
-                    data: { tournaments: upcomingTournaments }
-                });
-            } else {
-                const now = new Date();
-                const tournaments = await Tournament.find({ status: 'upcoming', startDate: { $gte: now } })
-                    .populate('organizerId', 'fullName email')
-                    .limit(10);
-
-                res.json({
-                    success: true,
-                    data: { tournaments }
-                });
-            }
+            res.json({
+                success: true,
+                data: { tournaments }
+            });
         } catch (error) {
             console.error('Get upcoming tournaments error:', error);
             res.status(500).json({
@@ -707,24 +643,14 @@ class TournamentController {
     // Get ongoing tournaments
     static async getOngoingTournaments(req, res) {
         try {
-            if (global.mockMode) {
-                const tournaments = this.getMockTournaments();
-                const ongoingTournaments = tournaments.filter(t => t.status === 'ongoing');
+            const now = new Date();
+            const tournaments = await Tournament.find({ status: 'ongoing', startDate: { $lte: now } })
+                .populate('organizerId', 'fullName email');
 
-                res.json({
-                    success: true,
-                    data: { tournaments: ongoingTournaments }
-                });
-            } else {
-                const now = new Date();
-                const tournaments = await Tournament.find({ status: 'ongoing', startDate: { $lte: now } })
-                    .populate('organizerId', 'fullName email');
-
-                res.json({
-                    success: true,
-                    data: { tournaments }
-                });
-            }
+            res.json({
+                success: true,
+                data: { tournaments }
+            });
         } catch (error) {
             console.error('Get ongoing tournaments error:', error);
             res.status(500).json({
