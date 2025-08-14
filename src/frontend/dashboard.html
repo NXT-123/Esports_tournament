@@ -69,25 +69,23 @@
     <section class="tournament-section">
       <div class="section-header">
         <h2 class="section-title">Các giải đấu đang diễn ra</h2>
-        <div class="section-controls">
-          <button class="nav-arrow nav-arrow-left" data-carousel-prev="tournamentContainer">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <button class="nav-arrow nav-arrow-right" data-carousel-next="tournamentContainer">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
       </div>
-      
       <div class="tournament-carousel">
+        <button class="carousel-btn prev-btn" data-carousel-prev="tournamentContainer">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <div class="tournament-container" id="tournamentContainer">
           <div class="loading-placeholder">Đang tải giải đấu...</div>
         </div>
+        <button class="carousel-btn next-btn" data-carousel-next="tournamentContainer">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
+      
       
               <div class="carousel-indicator">
           <div class="indicator-dots" data-carousel-dots="tournamentContainer">
@@ -101,23 +99,21 @@
       <div class="section-container">
         <div class="section-header">
           <h2 class="section-title">TIN TỨC MỚI NHẤT</h2>
-          <div class="section-controls">
-            <button class="nav-arrow nav-arrow-left" data-carousel-prev="newsContainer">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <button class="nav-arrow nav-arrow-right" data-carousel-next="newsContainer">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
         </div>
         <div class="news-carousel">
+          <button class="carousel-btn prev-btn" data-carousel-prev="newsContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
           <div class="news-container" id="newsContainer">
             <div class="loading-placeholder">Đang tải tin tức...</div>
           </div>
+          <button class="carousel-btn next-btn" data-carousel-next="newsContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
         <div class="carousel-indicator">
           <div class="indicator-dots" data-carousel-dots="newsContainer">
@@ -131,24 +127,22 @@
     <section class="highlights-section">
       <div class="section-header">
         <h2 class="section-title">HIGHLIGHT NỔI BẬT</h2>
-        <div class="section-controls">
-          <button class="nav-arrow nav-arrow-left" data-carousel-prev="highlightsContainer">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <button class="nav-arrow nav-arrow-right" data-carousel-next="highlightsContainer">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
       </div>
       
       <div class="highlights-carousel">
+        <button class="carousel-btn prev-btn" data-carousel-prev="highlightsContainer">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <div class="highlights-container" id="highlightsContainer">
           <div class="loading-placeholder">Đang tải highlights...</div>
         </div>
+        <button class="carousel-btn next-btn" data-carousel-next="highlightsContainer">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
       
       <div class="carousel-indicator">
@@ -332,7 +326,7 @@
         
         // Create tournament carousel
         tournamentCarousel = createCarousel('tournament', 'tournamentContainer', {
-          itemsPerPage: 1
+          itemsPerPage: 3
         });
         tournamentCarousel.setItems(tournaments);
         
@@ -364,7 +358,7 @@
         
         // Create news carousel
         newsCarousel = createCarousel('news', 'newsContainer', {
-          itemsPerPage: 1
+          itemsPerPage: 3
         });
         newsCarousel.setItems(news);
         

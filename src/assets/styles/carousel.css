@@ -5,6 +5,11 @@
   overflow: hidden;
   max-width: 1200px;
   margin: 0 auto;
+  display: flex;               /* arrange items in a row */
+  gap: 30px;                   /* spacing between cards */
+  justify-content: center;     /* center the row */
+  align-items: stretch;        /* equal height cards */
+  flex-wrap: nowrap;           /* keep items on one line per page */
 }
 
 .carousel-slider {
@@ -92,6 +97,7 @@
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 400px;
+  width: 370px;                /* fixed card width like dashboard */
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -151,6 +157,7 @@
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 400px;
+  width: 370px;                /* fixed card width like dashboard */
   display: flex;
   flex-direction: column;
   cursor: pointer;

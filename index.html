@@ -18,6 +18,8 @@
   <link rel="stylesheet" href="./src/assets/styles/layout.css" />
   <link rel="stylesheet" href="./src/assets/styles/guest-new.css" />
   <link rel="stylesheet" href="./src/assets/styles/carousel.css" />
+  <!-- Use dashboard styles so sections match dashboard.html exactly -->
+  <link rel="stylesheet" href="./src/assets/styles/dashboard.css" />
   
   <style>
     /* Loading screen styles */
@@ -212,7 +214,7 @@
         const guestController = new GuestController();
         window.guestController = guestController;
         
-        // Load guest view as fallback
+        // Load guest view as fallback (có nút Đăng nhập/Đăng ký và carousel nhiều mục)
         await guestController.renderGuestView();
         
         updateStatus('✅ Hệ thống đã sẵn sàng!');

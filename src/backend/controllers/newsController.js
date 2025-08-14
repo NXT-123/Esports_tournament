@@ -1,6 +1,8 @@
 const News = require('../models/News');
 const fs = require('fs');
 const path = require('path');
+const AuthController = require('./AuthController');
+const TournamentController = require('./tournamentController');
 
 class NewsController {
     // Get mock news data
@@ -67,6 +69,81 @@ class NewsController {
                 tournamentId,
                 search
             } = req.query;
+
+            // Check if we're in mock mode
+            if (global.mockMode) {
+                console.log('Getting all news from mock data...');
+                const mockNews = NewsController.getMockNews();
+                console.log('Loaded mock news:', mockNews.length, 'items');
+                
+                // Filter by status
+                let filteredNews = mockNews.filter(news => news.status === 'public');
+                
+                // Add search filter if provided
+                if (search) {
+                    const searchTerm = search.toLowerCase();
+                    filteredNews = filteredNews.filter(news =>
+                        news.title.toLowerCase().includes(searchTerm) ||
+                        news.content.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                // Add tournament filter if provided
+                if (tournamentId) {
+                    filteredNews = filteredNews.filter(news => news.tournamentId === tournamentId);
+                }
+                
+                console.log('Filtered news:', filteredNews.length, 'items');
+                
+                // Mock populate functionality
+                const mockUsers = AuthController.getMockUsers();
+                const mockTournaments = TournamentController.getMockTournaments();
+                
+                const populatedNews = filteredNews.map(news => {
+                    // Mock populate author
+                    const author = mockUsers.find(user => user._id === news.authorId);
+                    if (author) {
+                        news.authorId = {
+                            _id: author._id,
+                            fullName: author.fullName,
+                            email: author.email
+                        };
+                    }
+                    
+                    // Mock populate tournament
+                    const tournament = mockTournaments.find(t => t._id === news.tournamentId);
+                    if (tournament) {
+                        news.tournamentId = {
+                            _id: tournament._id,
+                            name: tournament.name,
+                            status: tournament.status
+                        };
+                    }
+                    
+                    return news;
+                });
+                
+                // Implement pagination
+                const total = populatedNews.length;
+                const startIndex = (page - 1) * limit;
+                const endIndex = startIndex + parseInt(limit);
+                const paginatedNews = populatedNews.slice(startIndex, endIndex);
+                
+                console.log('Paginated news:', paginatedNews.length, 'items');
+                
+                return res.json({
+                    success: true,
+                    message: "All news retrieved successfully from mock data",
+                    data: {
+                        news: paginatedNews,
+                        pagination: {
+                            current: parseInt(page),
+                            pages: Math.ceil(total / limit),
+                            total
+                        }
+                    }
+                });
+            }
 
             const query = { status: 'public' };
 
@@ -485,6 +562,47 @@ class NewsController {
     // Get published news
     static async getPublishedNews(req, res) {
         try {
+            // Check if we're in mock mode
+            if (global.mockMode) {
+                console.log('Getting published news from mock data...');
+                const mockNews = NewsController.getMockNews();
+                const publishedNews = mockNews.filter(n => n.status === 'public');
+
+                // Mock populate functionality
+                const mockUsers = AuthController.getMockUsers();
+                const mockTournaments = TournamentController.getMockTournaments();
+
+                const populatedNews = publishedNews.map(n => {
+                    const item = { ...n };
+                    const author = mockUsers.find(u => u._id === item.authorId);
+                    if (author) {
+                        item.authorId = {
+                            _id: author._id,
+                            fullName: author.fullName,
+                            email: author.email
+                        };
+                    }
+                    const tournament = mockTournaments.find(t => t._id === item.tournamentId);
+                    if (tournament) {
+                        item.tournamentId = {
+                            _id: tournament._id,
+                            name: tournament.name,
+                            status: tournament.status
+                        };
+                    }
+                    return item;
+                });
+
+                return res.json({
+                    success: true,
+                    message: "Published news retrieved successfully from mock data",
+                    data: {
+                        news: populatedNews,
+                        total: populatedNews.length
+                    }
+                });
+            }
+            
             console.log('Getting published news from MongoDB...');
             const news = await News.find({ status: 'public' })
                 .populate('authorId', 'fullName email')
@@ -492,6 +610,55 @@ class NewsController {
                 .sort({ createdAt: -1 });
 
             console.log('Found', news.length, 'published news articles');
+
+            // Fallback: if DB has no published news, use mock data to keep frontend populated
+            if (!news || news.length === 0) {
+                console.log('No published news found in MongoDB, falling back to mock data...');
+                try {
+                    const mockNews = NewsController.getMockNews();
+                    const publishedNews = mockNews.filter(n => n.status === 'public');
+
+                    const mockUsers = AuthController.getMockUsers();
+                    const mockTournaments = TournamentController.getMockTournaments();
+
+                    const populatedNews = publishedNews.map(n => {
+                        const item = { ...n };
+                        const author = mockUsers.find(u => u._id === item.authorId);
+                        if (author) {
+                            item.authorId = {
+                                _id: author._id,
+                                fullName: author.fullName,
+                                email: author.email
+                            };
+                        }
+                        const tournament = mockTournaments.find(t => t._id === item.tournamentId);
+                        if (tournament) {
+                            item.tournamentId = {
+                                _id: tournament._id,
+                                name: tournament.name,
+                                status: tournament.status
+                            };
+                        }
+                        return item;
+                    });
+
+                    return res.json({
+                        success: true,
+                        message: 'Published news retrieved successfully from mock fallback',
+                        data: {
+                            news: populatedNews,
+                            total: populatedNews.length
+                        }
+                    });
+                } catch (fallbackErr) {
+                    console.error('Mock fallback failed:', fallbackErr);
+                    return res.json({
+                        success: true,
+                        message: 'Published news retrieved successfully',
+                        data: { news: [], total: 0 }
+                    });
+                }
+            }
 
             res.json({
                 success: true,

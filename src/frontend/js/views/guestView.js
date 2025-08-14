@@ -1,6 +1,7 @@
 import { loadTranslations } from '../lang.js';
 import { apiCall, API_ENDPOINTS } from '../api.js';
 import { createCarousel } from '../carousel.js';
+import { loadTournamentsCarousel, loadNewsCarousel, loadHighlightsCarousel } from '../utils/carouselLoaders.js';
 
 export async function renderGuestView() {
   document.body.innerHTML = `
@@ -53,62 +54,57 @@ export async function renderGuestView() {
     </header>
 
     <main class="main-content">
-      <!-- Hero Section with Tournament Carousel -->
-      <section class="hero-section">
-        <div class="hero-container">
-          <h1 class="hero-title">Các giải đấu đang diễn ra</h1>
-          <div class="tournament-carousel">
-            <button class="carousel-btn prev-btn" data-carousel-prev="tournamentCarousel">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <div class="carousel-container" id="tournamentCarousel">
-              <div class="loading-placeholder">Loading tournaments...</div>
-            </div>
-            <button class="carousel-btn next-btn" data-carousel-next="tournamentCarousel">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <div class="carousel-indicator">
-              <div class="indicator-dots" data-carousel-dots="tournamentCarousel">
-                <div class="dot active"></div>
-              </div>
-            </div>
+      <!-- Tournament Section (match dashboard.html) -->
+      <section class="tournament-section">
+        <div class="section-header">
+          <h2 class="section-title">Các giải đấu đang diễn ra</h2>
+        </div>
+        <div class="tournament-carousel">
+          <button class="carousel-btn prev-btn" data-carousel-prev="tournamentContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="tournament-container" id="tournamentContainer">
+            <div class="loading-placeholder">Đang tải giải đấu...</div>
+          </div>
+          <button class="carousel-btn next-btn" data-carousel-next="tournamentContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="carousel-indicator">
+          <div class="indicator-dots" data-carousel-dots="tournamentContainer">
+            <div class="dot active"></div>
           </div>
         </div>
       </section>
 
-      <!-- News Section -->
+      <!-- News Section (match dashboard.html) -->
       <section class="news-section">
         <div class="section-container">
           <div class="section-header">
-            <h2 class="section-title" style="color: #fff; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000, 0px 0px 4px #000; font-weight: 800; font-size: 2.5rem; letter-spacing: 1px;">TIN TỨC MỚI NHẤT</h2>
-            <button class="search-btn">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M35 35L27.75 27.75M31.6667 18.3333C31.6667 25.6971 25.6971 31.6667 18.3333 31.6667C10.9695 31.6667 5 25.6971 5 18.3333C5 10.9695 10.9695 5 18.3333 5C25.6971 5 31.6667 10.9695 31.6667 18.3333Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
+            <h2 class="section-title">TIN TỨC MỚI NHẤT</h2>
           </div>
           <div class="news-carousel">
-            <button class="carousel-btn prev-btn" data-carousel-prev="newsList">
+            <button class="carousel-btn prev-btn" data-carousel-prev="newsContainer">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <div class="carousel-container" id="newsList">
-              <div class="loading-placeholder">Loading news...</div>
+            <div class="news-container" id="newsContainer">
+              <div class="loading-placeholder">Đang tải tin tức...</div>
             </div>
-            <button class="carousel-btn next-btn" data-carousel-next="newsList">
+            <button class="carousel-btn next-btn" data-carousel-next="newsContainer">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                 <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <div class="carousel-indicator">
-              <div class="indicator-dots" data-carousel-dots="newsList">
-                <div class="dot active"></div>
-              </div>
+          </div>
+          <div class="carousel-indicator">
+            <div class="indicator-dots" data-carousel-dots="newsContainer">
+              <div class="dot active"></div>
             </div>
           </div>
         </div>
@@ -116,75 +112,29 @@ export async function renderGuestView() {
 
       <!-- Highlights Section -->
       <section class="highlights-section">
-        <div class="section-container">
-          <h2 class="section-title highlight-title" style="color: #fff; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000, 0px 0px 4px #000; font-weight: 800; font-size: 2.5rem; letter-spacing: 1px;">HIGHLIGHT NÓNG THỔI</h2>
-          <div class="highlights-content">
-            <div class="highlights-carousel">
-              <button class="carousel-btn prev-btn" data-carousel-prev="highlightsList">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                  <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <div class="carousel-container" id="highlightsList">
-                <div class="loading-placeholder">Loading highlights...</div>
-              </div>
-              <button class="carousel-btn next-btn" data-carousel-next="highlightsList">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                  <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <div class="carousel-indicator">
-                <div class="indicator-dots" data-carousel-dots="highlightsList">
-                  <div class="dot active"></div>
-                </div>
-              </div>
-            </div>
-            <div class="featured-highlight">
-              <div id="featuredHighlight" class="featured-video">
-                <div class="video-placeholder">Select a highlight to play</div>
-              </div>
-              <div class="video-controls">
-                <button class="control-btn">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                    <path d="M20 26.6667V20M20 13.3334H20.0167M36.6667 20C36.6667 29.2048 29.2047 36.6667 20 36.6667C10.7952 36.6667 3.33333 29.2048 3.33333 20C3.33333 10.7953 10.7952 3.33337 20 3.33337C29.2047 3.33337 36.6667 10.7953 36.6667 20Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="control-btn">
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                    <path d="M11.9167 39V13H16.25V39H11.9167ZM40.0833 39L20.5833 26L40.0833 13V39ZM35.75 30.875V21.125L28.3833 26L35.75 30.875Z" fill="#FEF7FF"/>
-                  </svg>
-                </button>
-                <button class="control-btn play-btn">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <path d="M10 6L38 24L10 42V6Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="control-btn">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <path d="M20 8H12V40H20V8Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M36 8H28V40H36V8Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="control-btn">
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                    <path d="M35.75 39V13H40.0833V39H35.75ZM11.9167 39V13L31.4167 26L11.9167 39ZM16.25 30.875L23.6167 26L16.25 21.125V30.875Z" fill="#FEF7FF"/>
-                  </svg>
-                </button>
-                <button class="control-btn">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <path d="M17.18 27.02L30.84 34.98M30.82 13.02L17.18 20.98M42 10C42 13.3137 39.3137 16 36 16C32.6863 16 30 13.3137 30 10C30 6.68629 32.6863 4 36 4C39.3137 4 42 6.68629 42 10ZM18 24C18 27.3137 15.3137 30 12 30C8.68629 30 6 27.3137 6 24C6 20.6863 8.68629 18 12 18C15.3137 18 18 20.6863 18 24ZM42 38C42 41.3137 39.3137 44 36 44C32.6863 44 30 41.3137 30 38C30 34.6863 32.6863 32 36 32C39.3137 32 42 34.6863 42 38Z" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-              <div class="video-progress">
-                <div class="progress-bar">
-                  <div class="progress-track">
-                    <div class="progress-fill"></div>
-                    <div class="progress-handle"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div class="section-header">
+          <h2 class="section-title">HIGHLIGHT NỔI BẬT</h2>
+        </div>
+        
+        <div class="highlights-carousel">
+          <button class="carousel-btn prev-btn" data-carousel-prev="highlightsContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M38 24H10M10 24L24 38M10 24L24 10" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="highlights-container" id="highlightsContainer">
+            <div class="loading-placeholder">Đang tải highlights...</div>
+          </div>
+          <button class="carousel-btn next-btn" data-carousel-next="highlightsContainer">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M10 24H38M38 24L24 10M38 24L24 38" stroke="#F19EDC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="carousel-indicator">
+          <div class="indicator-dots" data-carousel-dots="highlightsContainer">
+            <div class="dot active"></div>
           </div>
         </div>
       </section>
@@ -304,6 +254,8 @@ export async function renderGuestView() {
     document.getElementById('ctaRegisterBtn')?.addEventListener('click', () => guestController.navigateToRegister());
   }
 
+  // Giữ nguyên giao diện guest (không chuyển trang) để luôn hiển thị Login/Register
+
   loadTranslations('vi'); // Default to Vietnamese
 
   // Áp dụng lại dark mode nếu đang bật
@@ -326,56 +278,14 @@ const tournamentsPerPage = 3;
 
 // Tải giải đấu từ backend (đang diễn ra, fallback sang sắp diễn ra)
 async function loadTournaments() {
-  const container = document.getElementById('tournamentCarousel');
-  if (!container) return;
-  try {
-    // Thử lấy giải đang diễn ra trước
-    let res = await apiCall(API_ENDPOINTS.TOURNAMENTS.ONGOING, {}, 'GET');
-    let tournaments = res?.data?.tournaments || [];
-    // Nếu không có thì fallback sang giải sắp diễn ra
-    if (!tournaments.length) {
-      res = await apiCall(API_ENDPOINTS.TOURNAMENTS.UPCOMING, {}, 'GET');
-      tournaments = res?.data?.tournaments || [];
-    }
-    if (!tournaments.length) {
-      container.innerHTML = '<div class="loading-placeholder">Chưa có giải đấu</div>';
-      return;
-    }
-    
-    // Create tournament carousel
-    const tournamentCarousel = createCarousel('tournament', 'tournamentCarousel', {
-      itemsPerPage: 3
-    });
-    tournamentCarousel.setItems(tournaments);
-  } catch (e) {
-    console.error('Error loading tournaments:', e);
-    container.innerHTML = '<div class="loading-placeholder">Lỗi tải giải đấu</div>';
-  }
+  await loadTournamentsCarousel('tournamentContainer', 3);
 }
 
 // News carousel functionality
 
 // Tải tin tức từ backend
 async function loadNews() {
-  const container = document.getElementById('newsList');
-  if (!container) return;
-  try {
-    const res = await apiCall(API_ENDPOINTS.NEWS.PUBLISHED, {}, 'GET');
-    const news = res?.data?.news || [];
-    if (!news.length) {
-      container.innerHTML = '<div class="loading-placeholder">Chưa có tin tức</div>';
-      return;
-    }
-    
-    // Create news carousel
-    const newsCarousel = createCarousel('news', 'newsList', {
-      itemsPerPage: 3
-    });
-    newsCarousel.setItems(news);
-  } catch (e) {
-    console.error('Error loading news:', e);
-    container.innerHTML = '<div class="loading-placeholder">Lỗi tải tin tức</div>';
-  }
+  await loadNewsCarousel('newsContainer', 3);
 }
 
 
@@ -384,23 +294,5 @@ async function loadNews() {
 
 // Tải highlight từ backend
 async function loadHighlights() {
-  const container = document.getElementById('highlightsList');
-  if (!container) return;
-  try {
-    const res = await apiCall(API_ENDPOINTS.HIGHLIGHTS.PUBLISHED, {}, 'GET');
-    const highlights = res?.data?.highlights || [];
-    if (!highlights.length) {
-      container.innerHTML = '<div class="loading-placeholder">Chưa có highlight</div>';
-      return;
-    }
-    
-    // Create highlights carousel
-    const highlightsCarousel = createCarousel('highlight', 'highlightsList', {
-      itemsPerPage: 3
-    });
-    highlightsCarousel.setItems(highlights);
-  } catch (e) {
-    console.error('Error loading highlights:', e);
-    container.innerHTML = '<div class="loading-placeholder">Lỗi tải highlight</div>';
-  }
+  await loadHighlightsCarousel('highlightsContainer', 1);
 }

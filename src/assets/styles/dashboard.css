@@ -94,6 +94,7 @@
 }
 
 .tournament-carousel {
+  position: relative;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 60px;
@@ -311,6 +312,11 @@
 .news-carousel {
   position: relative;
   margin-bottom: 40px;
+}
+
+/* Ensure side arrows position relative to the highlights carousel wrapper */
+.highlights-carousel {
+  position: relative;
 }
 
 .news-card {
