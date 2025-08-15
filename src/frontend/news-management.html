@@ -77,8 +77,8 @@
                 </button>
             </div>
 
-            <div class="news-list">
-                <div class="news-item" onclick="viewNews(1)">
+            <div class="news-list" id="newsList">
+                <div class="loading-placeholder">Đang tải tin tức...</div>
                     <div class="news-avatar">
                         <img src="https://api.builder.io/api/v1/image/assets/TEMP/9fee9f9fde03e83fbbcbedb7a213bfd8ffdb3b57?width=120" alt="News Avatar">
                     </div>
@@ -210,13 +210,6 @@
                     </div>
                 </div>
 
-                <div class="load-more">
-                    <button class="load-more-btn">
-                        <svg width="75" height="75" viewBox="0 0 75 75" fill="none">
-                            <path d="M37.5 48.125L18.75 29.375L23.125 25L37.5 39.375L51.875 25L56.25 29.375L37.5 48.125Z" fill="#1D1B20"/>
-                        </svg>
-                    </button>
-                </div>
             </div>
         </div>
     </main>
@@ -319,9 +312,73 @@
             }
         }
 
-        // Load more functionality
-        document.querySelector('.load-more-btn').addEventListener('click', function() {
-            alert('Đang tải thêm tin tức...');
+        // Load more functionality (guarded)
+        const loadMoreBtn = document.querySelector('.load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                alert('Đang tải thêm tin tức...');
+            });
+        }
+
+        // Load news from backend API
+        async function loadNews() {
+            try {
+                const response = await fetch('http://localhost:3000/api/news/published');
+                const data = await response.json();
+                
+                const newsList = document.getElementById('newsList');
+                const placeholder = newsList.querySelector('.loading-placeholder');
+                if (placeholder) placeholder.remove();
+                
+                if (data.data && data.data.news && data.data.news.length > 0) {
+                    data.data.news.forEach(news => {
+                        const newsItem = document.createElement('div');
+                        newsItem.className = 'news-item';
+                        newsItem.onclick = () => viewNews(news._id);
+                        
+                        const formattedDate = news.publishedAt ? new Date(news.publishedAt).toLocaleDateString('vi-VN') : '';
+                        
+                        newsItem.innerHTML = `
+                            <div class="news-avatar">
+                                <img src="${news.images && news.images.length > 0 ? news.images[0] : 'https://api.builder.io/api/v1/image/assets/TEMP/9fee9f9fde03e83fbbcbedb7a213bfd8ffdb3b57?width=120'}" alt="News Avatar">
+                            </div>
+                            <div class="news-title">${news.title || 'Tin tức không tiêu đề'}</div>
+                            <div class="news-date">${formattedDate}</div>
+                            <div class="news-actions">
+                                <button class="edit-btn" onclick="event.stopPropagation(); editNews('${news._id}')">chỉnh sửa</button>
+                                <button class="delete-btn" onclick="event.stopPropagation(); deleteNews(this)">Xóa</button>
+                            </div>
+                        `;
+                        newsList.appendChild(newsItem);
+                    });
+                } else {
+                    if (placeholder) {
+                        placeholder.textContent = 'Không có tin tức nào';
+                    } else {
+                        const empty = document.createElement('div');
+                        empty.className = 'no-content';
+                        empty.textContent = 'Không có tin tức nào';
+                        newsList.prepend(empty);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading news:', error);
+                const newsList = document.getElementById('newsList');
+                const placeholder = newsList.querySelector('.loading-placeholder');
+                if (placeholder) {
+                    placeholder.textContent = 'Lỗi tải tin tức';
+                } else {
+                    const err = document.createElement('div');
+                    err.className = 'loading-placeholder';
+                    err.textContent = 'Lỗi tải tin tức';
+                    newsList.prepend(err);
+                }
+            }
+        }
+
+        // Load news when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNews();
         });
     </script>
 </body>

@@ -77,7 +77,9 @@
 
                     <div class="form-group">
                         <label for="tournament-select" class="form-label">Highlight này thuộc giải đấu:</label>
-                        <input type="text" id="tournament-select" name="tournament-select" class="form-input" required>
+                        <select id="tournament-select" name="tournament-select" class="form-input" required>
+                            <option value="">Chọn giải đấu...</option>
+                        </select>
                     </div>
                 </div>
 
@@ -185,6 +187,40 @@
     </footer>
 
     <script>
+        // API base URL
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        // Load tournaments on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadTournaments();
+        });
+
+        // Load tournaments from API
+        async function loadTournaments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/tournaments`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.tournaments) {
+                    const tournamentSelect = document.getElementById('tournament-select');
+                    
+                    // Clear existing options except the first one
+                    tournamentSelect.innerHTML = '<option value="">Chọn giải đấu...</option>';
+                    
+                    // Add tournament options
+                    data.data.tournaments.forEach(tournament => {
+                        const option = document.createElement('option');
+                        option.value = tournament._id;
+                        option.textContent = tournament.name;
+                        tournamentSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading tournaments:', error);
+                alert('Không thể tải danh sách giải đấu. Vui lòng thử lại sau.');
+            }
+        }
+
         // Status toggle functionality
         document.querySelectorAll('.status-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -194,22 +230,72 @@
         });
 
         // Form submission
-        document.querySelector('.highlight-create-form').addEventListener('submit', function(e) {
+        document.querySelector('.highlight-create-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Validate form
-            const highlightName = document.getElementById('highlight-name').value;
-            const tournament = document.getElementById('tournament-select').value;
-            const description = document.getElementById('highlight-description').value;
-            const videoLink = document.getElementById('video-link').value;
+            // Get form data
+            const highlightName = document.getElementById('highlight-name').value.trim();
+            const tournamentId = document.getElementById('tournament-select').value;
+            const description = document.getElementById('highlight-description').value.trim();
+            const videoUrl = document.getElementById('video-link').value.trim();
+            const statusBtn = document.querySelector('.status-btn.active');
+            const status = statusBtn.textContent === 'Công khai' ? 'public' : 'private';
             
-            if (!highlightName || !tournament || !description || !videoLink) {
+            // Validate form
+            if (!highlightName || !tournamentId || !description || !videoUrl) {
                 alert('Vui lòng điền đầy đủ thông tin!');
                 return;
             }
+
+            // Validate video URL
+            try {
+                new URL(videoUrl);
+            } catch (error) {
+                alert('Link video không hợp lệ!');
+                return;
+            }
             
-            alert('Highlight đã được tạo thành công!');
-            window.location.href = 'highlight-management.html';
+            // Prepare data for API
+            const highlightData = {
+                title: highlightName,
+                tournamentId: tournamentId,
+                description: description,
+                videoUrl: videoUrl,
+                status: status,
+                matchId: null // Optional, can be null
+            };
+            
+            try {
+                // Get auth token from localStorage
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    alert('Bạn cần đăng nhập để tạo highlight!');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Send request to create highlight
+                const response = await fetch(`${API_BASE_URL}/highlights`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(highlightData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Highlight đã được tạo thành công!');
+                    window.location.href = 'highlight-management.html';
+                } else {
+                    alert(result.message || 'Có lỗi xảy ra khi tạo highlight!');
+                }
+            } catch (error) {
+                console.error('Error creating highlight:', error);
+                alert('Không thể tạo highlight. Vui lòng thử lại sau.');
+            }
         });
     </script>
 </body>
